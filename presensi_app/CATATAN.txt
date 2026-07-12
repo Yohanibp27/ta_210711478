@@ -1,0 +1,18 @@
+cek sdk aman ga di cmd: flutter doctor
+flutter create . (kalo folder udah ada)
+flutter create (nama folder)
+
+cara jalanin di hp:
+flutter devices  (cek devices)
+flutter run -d V2036A
+flutter run -d V2027
+
+cara jalanin di emulator:
+flutter emulators (cek emulators) 
+flutter emulators --launch Yohaniii atau my-app
+flutter run (jalanin code)
+
+Biar tampilan ikut update terus (Hot Reload / Hot Restart)
+Kalau terminal tempat kamu jalankan flutter run masih aktif, kamu bisa:
+Tekan r (huruf kecil) → Hot Reload → update tampilan langsung tanpa restart penuh.
+Tekan R (huruf besar) → Hot Restart → aplikasi reset dari awal, tapi lebih cepat dari stop-start.

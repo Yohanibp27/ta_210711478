@@ -1,0 +1,19 @@
+
+.vscode/
+cara buatnya.txt
+*.xlsx
+node_modules/
+.env
+dist/
+build/
+back-end/config/config.json
+back-end/uploads/
+*.rest
+presensi_app/lib/pages/text/
+presensi_app/lib/services/*.txt
+presensi_app/lib/utils/*.txt
+presensi_app/flutter_jank_metrics_*.json
+presensi_app/android/app/build.gradle.txt
+presensi_app/android/build.gradle.txt
+presensi_app/lib/pages/activities/*.txt
+presensi_app/android/gradle.properties.txt
