@@ -32,13 +32,14 @@ const ShiftAssignment = db.define(
   },
   {
     freezeTableName: true,
+    tableName: "shiftassignments",
     indexes: [
       {
         unique: true,
         fields: ["userId", "date", "workShiftId"], // satu shift assignment per hari, 1 user shift bisa punya lebih dari 1 shift dalam 1 hari karena bisa jadi ada pertukaran shift dengan temannya
       },
     ],
-  }
+  },
 );
 
 Users.hasMany(ShiftAssignment, { foreignKey: "userId" });
