@@ -693,7 +693,7 @@ const AttendanceReport = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: "center" }}>
+                      <td colSpan="9" style={{ textAlign: "center" }}>
                         <div className="no-data">
                           <h4 className="empty-title">
                             Belum ada data presensi

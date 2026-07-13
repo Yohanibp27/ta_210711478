@@ -114,7 +114,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
         icon: <FiSettings />,
         children: [
           { name: "Profil Akun", path: "/user/profile" },
-          { name: "Kelola Hari Libur", path: "/calendar-management" },
+          { name: "Kelola Hari Libur", path: "/calendars" },
           { name: "Kelola Jam Kerja", path: "/workshifts" },
           { name: "Jenis Pengajuan", path: "/leaves" },
           { name: "Jenis Sub Pengajuan", path: "/sub-leaves" },
@@ -214,7 +214,7 @@ const Sidebar = ({ isCollapsed, onToggleCollapse }) => {
         icon: <FiSettings />,
         children: [
           { name: "Profil Akun", path: "/user/profile" },
-          { name: "Kelola Hari Libur", path: "/calendar-management" },
+          { name: "Kelola Hari Libur", path: "/calendars" },
         ],
       },
     ],

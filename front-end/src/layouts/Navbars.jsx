@@ -179,7 +179,7 @@ const Navbar = ({ onToggleMobile }) => {
       "/user/profile": "Profil Akun",
       //   "/settings": "Pengaturan Akun",
       "/import-medical-action": "Import Laporan",
-      "/calendar-management": "Kelola Hari Libur",
+      "/calendars": "Kelola Hari Libur",
       "/workshifts": "Kelola Jam Kerja",
       "/leaves": "Kelola Pengajuan",
       "/sub-leaves": "Kelola Sub Pengajuan",
@@ -308,9 +308,9 @@ const Navbar = ({ onToggleMobile }) => {
       { name: "Pengaturan", path: "#" },
       { name: "Profil Akun", path: "/user/profile" },
     ],
-    "/calendar-management": [
+    "/calendars": [
       { name: "Pengaturan", path: "#" },
-      { name: "Kelola Hari Libur", path: "/calendar-management" },
+      { name: "Kelola Hari Libur", path: "/calendars" },
     ],
     "/workshifts": [
       { name: "Pengaturan", path: "#" },

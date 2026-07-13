@@ -32,7 +32,7 @@ import {
 import axiosInstance from "../../api/axios.js";
 
 function AttendanceHistory() {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const today = new Date().toISOString().split("T")[0];
   const endDate = new Date(new Date().setDate(new Date().getDate() + 7))
     .toISOString()
@@ -177,7 +177,7 @@ function AttendanceHistory() {
     };
 
     fetchData();
-  }, [token, filter.startDate, filter.endDate]);
+  }, [filter.startDate, filter.endDate]);
 
   const getAttendances = async () => {
     try {

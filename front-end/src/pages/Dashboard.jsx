@@ -451,7 +451,7 @@ function Dashboard() {
       //   const res = await axios.get("http://localhost:3000/attendances", {
       //     headers: { Authorization: `Bearer ${token}` },
       //   });
-      const res = await axiosInstance.get("http://localhost:3000/attendances");
+      const res = await axiosInstance.get("/attendances");
 
       const data = res.data.data.filter((item) => {
         const date = new Date(item.date + "T00:00:00");
