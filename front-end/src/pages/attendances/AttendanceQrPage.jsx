@@ -1,62 +1,74 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { jwtDecode } from "jwt-decode";
+// import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../../api/axios.js";
 
 const AttendanceQrPage = ({ fullScreen = false }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [qrUrl, setQrUrl] = useState("");
-  const [userId, setUserId] = useState(null);
+  //   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [qrToken, setQrToken] = useState("");
-  const [expiresIn, setExpiresIn] = useState(30);
+  //   const [qrToken, setQrToken] = useState("");
+  //   const [expiresIn, setExpiresIn] = useState(30);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
+  //   useEffect(() => {
+  //     if (token) {
+  //       try {
+  //         const decoded = jwtDecode(token);
 
-        setUserId(decoded.id || decoded.userId);
-      } catch (err) {
-        console.error("Token tidak valid:", err);
-      }
-    }
-  }, []);
+  //         setUserId(decoded.id || decoded.userId);
+  //       } catch (err) {
+  //         console.error("Token tidak valid:", err);
+  //       }
+  //     }
+  //   }, []);
 
-  useEffect(() => {
-    let interval;
-    const fetchQr = async () => {
-      setLoading(true);
-      try {
-        // ip address laptop:localhost/route
-        // const res = await fetch("http://192.168.100.199:3000/dynamic-qr", {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`,
-        //   },
-        // });
-        //  const data = await res.json();
+  //   useEffect(() => {
+  //     let interval;
+  //     const fetchQr = async () => {
+  //       setLoading(true);
+  //       setErrorMessage("");
+  //       try {
+  //         // ip address laptop:localhost/route
+  //         // const res = await fetch("http://192.168.100.199:3000/dynamic-qr", {
+  //         //   headers: {
+  //         //     Authorization: `Bearer ${token}`,
+  //         //   },
+  //         // });
+  //         //  const data = await res.json();
 
-        const res = await axiosInstance.get("/dynamic-qr");
-        const data = res.data;
-        // backend cuma kirim token + expiresIn
-        setQrToken(data.token);
-        setExpiresIn(data.expiresIn);
+  //         const res = await axiosInstance.get("/dynamic-qr");
+  //         const data = res.data;
 
-        const qrImage = await QRCode.toDataURL(data.token);
-        setQrUrl(qrImage);
-        setLoading(false);
-      } catch (err) {
-        console.error("Gagal mengambil QR:", err);
-        setLoading(false);
-      }
-    };
-    fetchQr();
+  //         if (!data?.token) {
+  //           throw new Error("Token QR tidak ditemukan pada respons backend");
+  //         }
 
-    // refresh otomatis sesuai expiresIn
-    interval = setInterval(fetchQr, 30000);
+  //         // backend cuma kirim token + expiresIn
+  //         // setQrToken(data.token);
+  //         // setExpiresIn(data.expiresIn);
 
-    return () => clearInterval(interval);
-  }, [token]);
+  //         const qrImage = await QRCode.toDataURL(data.token);
+  //         setQrUrl(qrImage);
+  //         setLoading(false);
+  //       } catch (err) {
+  //         console.error("Gagal mengambil QR:", err);
+  //         setQrUrl("");
+  //         setErrorMessage(
+  //           err.response?.data?.message || err.message || "Gagal memuat QR Code",
+  //         );
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     };
+  //     fetchQr();
+
+  //     // refresh otomatis sesuai expiresIn
+  //     interval = setInterval(fetchQr, 30000);
+
+  //     return () => clearInterval(interval);
+  //   }, [token]);
 
   // statis new tab kosong
   //   const handleWindowOpen = () => {
@@ -127,23 +139,154 @@ const AttendanceQrPage = ({ fullScreen = false }) => {
   //     }
   //   };
 
+  //   const handleOpenNewTab = () => {
+  //     window.open("/qr-fullscreen", "_blank");
+  //   };
+  //   if (fullScreen) {
+  //     return (
+  //       <div className="qr-full-screen">
+  //         <div className="qr-display-card">
+  //           <h1>QR Code Presensi RSBI</h1>
+  //           {qrUrl ? (
+  //             <img src={qrUrl} alt="QR Code" className="qr-large" />
+  //           ) : (
+  //             <div className="qr-loading-box">
+  //               <div className="qr-spinner"></div>
+  //               <p className="qr-loading">Memuat QR Code...</p>
+  //             </div>
+  //           )}
+  //           <p>Silakan scan menggunakan aplikasi presensi</p>
+  //         </div>
+  //       </div>
+  //     );
+  //   }
+
+  const fetchQr = useCallback(async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const response = await axiosInstance.get("/dynamic-qr");
+      const data = response.data;
+
+      if (!data?.token) {
+        throw new Error("Token QR tidak ditemukan pada respons backend");
+      }
+
+      const qrImage = await QRCode.toDataURL(data.token);
+
+      setQrUrl(qrImage);
+    } catch (error) {
+      console.error(
+        "Gagal mengambil QR:",
+        error.response?.data || error.message,
+      );
+
+      setQrUrl("");
+
+      setErrorMessage(
+        error.response?.data?.message ||
+          error.message ||
+          "Gagal memuat QR Code",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchQr();
+
+    const intervalId = setInterval(() => {
+      fetchQr();
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchQr]);
+
   const handleOpenNewTab = () => {
-    window.open("/qr-fullscreen", "_blank");
+    window.open(
+      `${window.location.origin}/qr-fullscreen`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
+
+  const renderQrContent = (isLarge = false) => {
+    if (loading) {
+      return (
+        <div className="qr-loading-box">
+          <div className="qr-spinner"></div>
+          <p className="qr-loading">Memuat QR Code...</p>
+        </div>
+      );
+    }
+
+    if (errorMessage) {
+      return (
+        <div className="qr-loading-box">
+          <p
+            style={{
+              color: "red",
+              textAlign: "center",
+              marginBottom: "15px",
+            }}
+          >
+            {errorMessage}
+          </p>
+
+          <button type="button" className="qr-newtab-btn" onClick={fetchQr}>
+            Coba Lagi
+          </button>
+        </div>
+      );
+    }
+
+    if (!qrUrl) {
+      return (
+        <div className="qr-loading-box">
+          <p className="qr-loading">QR Code tidak tersedia</p>
+
+          <button type="button" className="qr-newtab-btn" onClick={fetchQr}>
+            Muat Ulang
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <img
+          src={qrUrl}
+          alt="QR Code Presensi"
+          className={isLarge ? "qr-large" : "qr-image"}
+        />
+
+        <p className={isLarge ? "" : "qr-desc"}>
+          {isLarge
+            ? "Silakan scan menggunakan aplikasi presensi"
+            : "Scan QR ini untuk mencatat kehadiran otomatis"}
+        </p>
+
+        {!isLarge && (
+          <button
+            type="button"
+            className="qr-newtab-btn"
+            onClick={handleOpenNewTab}
+          >
+            Buka di Tab Baru
+          </button>
+        )}
+      </>
+    );
+  };
+
   if (fullScreen) {
     return (
       <div className="qr-full-screen">
         <div className="qr-display-card">
           <h1>QR Code Presensi RSBI</h1>
-          {qrUrl ? (
-            <img src={qrUrl} alt="QR Code" className="qr-large" />
-          ) : (
-            <div className="qr-loading-box">
-              <div className="qr-spinner"></div>
-              <p className="qr-loading">Memuat QR Code...</p>
-            </div>
-          )}
-          <p>Silakan scan menggunakan aplikasi presensi</p>
+          {renderQrContent(true)}
         </div>
       </div>
     );
@@ -151,10 +294,24 @@ const AttendanceQrPage = ({ fullScreen = false }) => {
 
   return (
     <div className="content-page">
-      <div className="qr-container">
+      {/* <div className="qr-container">
         <div className="qr-card">
           <h2 className="qr-title">QR Code Kehadiran</h2>
-          {qrUrl ? (
+          {loading ? (
+            <div className="qr-loading-box">
+              <div className="qr-spinner"></div>
+              <p className="qr-loading">Memuat QR Code...</p>
+            </div>
+          ) : errorMessage ? (
+            <div className="qr-loading-box">
+              <p style={{ color: "red", textAlign: "center" }}>
+                {errorMessage}
+              </p>
+              <button className="qr-newtab-btn" onClick={fetchQr}>
+                Coba Lagi
+              </button>
+            </div>
+          ) : qrUrl ? (
             <>
               <img src={qrUrl} alt="QR Attendance" className="qr-image" />
               <p className="qr-desc">
@@ -164,12 +321,13 @@ const AttendanceQrPage = ({ fullScreen = false }) => {
                 Buka di Tab Baru
               </button>
             </>
-          ) : (
-            <div className="qr-loading-box">
-              <div className="qr-spinner"></div>
-              <p className="qr-loading">Memuat QR Code...</p>
-            </div>
-          )}
+          ) : null}
+        </div>
+      </div> */}
+      <div className="qr-container">
+        <div className="qr-card">
+          <h2 className="qr-title">QR Code Kehadiran</h2>
+          {renderQrContent(false)}
         </div>
       </div>
     </div>
