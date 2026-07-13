@@ -1324,7 +1324,8 @@ const LeavaeRequestDetailModal = ({
 }) => {
   if (!show || !data) return null;
 
-  const FILE_BASE_URL = "http://localhost:3000/uploads/evidence/";
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const FILE_BASE_URL = `${API_BASE_URL}/uploads/evidence/`;
   //   const getApprovalLabel = (status) => {
   //     return formatStatus(status);
   //   };

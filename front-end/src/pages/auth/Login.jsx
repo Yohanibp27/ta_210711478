@@ -42,8 +42,8 @@ function Login() {
       localStorage.setItem("limited", data.limited ? "true" : "false");
       //   localStorage.setItem("status", data.user.status);
 
-      console.log("Data user (login frontend):", data);
-      console.log("Token disimpan (login frontend):", data.accessToken);
+      //   console.log("Data user (login frontend):", data);
+      //   console.log("Token disimpan (login frontend):", data.accessToken);
 
       if (data.user?.status === "Cuti") {
         alert("Anda sedang cuti. Beberapa fitur tidak dapat digunakan.");
