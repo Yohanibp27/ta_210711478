@@ -135,13 +135,13 @@ function ShiftExchangeList() {
       const isWasintern = dept.includes("subbag wasintern");
       const isManagerOrSupervisor = role === "manager" || role === "supervisor";
       if (role === "admin") {
-        endpoint = "http://localhost:3000/all-shift-exchanges";
+        endpoint = "/all-shift-exchanges";
       } else if (isManagerOrSupervisor && isWasintern) {
         // SDM (Wasintern)
-        endpoint = "http://localhost:3000/all-shift-exchanges";
+        endpoint = "/all-shift-exchanges";
       } else if (isManagerOrSupervisor) {
         // Manager/Supervisor biasa
-        endpoint = "http://localhost:3000/shift-exchanges/manager";
+        endpoint = "/shift-exchanges/manager";
       } else {
         return alert("Role tidak memiliki akses!");
       }
