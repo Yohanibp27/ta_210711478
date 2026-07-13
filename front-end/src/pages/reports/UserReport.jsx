@@ -1,4 +1,4 @@
-import axios from "axios";
+// import axios from "axios";
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Avatar from "../../assets/avatar-ungu.png";
@@ -17,7 +17,7 @@ import {
 import axiosInstance from "../../api/axios.js";
 
 const UserReport = () => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -34,7 +34,7 @@ const UserReport = () => {
 
   useEffect(() => {
     fetchData();
-  }, [token]);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);

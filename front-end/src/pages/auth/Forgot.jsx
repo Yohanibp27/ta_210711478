@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 import Logo from "../../assets/images/bhayangkara.png";
+import axiosInstance from "../../api/axios";
 
 function ForgotPass() {
   const navigate = useNavigate();
@@ -17,11 +18,10 @@ function ForgotPass() {
     setError("");
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/forgot-password",
-        {
-          email,
-        },
+      const res = await axiosInstance.post(
+        // "http://localhost:3000/forgot-password",
+        "/forgot-password",
+        { email },
         {
           headers: { "Content-Type": "application/json" },
         },
@@ -75,9 +75,7 @@ function ForgotPass() {
               required
             />
           </div>
-          <small className="forgot-text">
-            Contoh: admin@gmail.com
-          </small>
+          <small className="forgot-text">Contoh: admin@gmail.com</small>
           <button type="submit" className="button-login">
             {loading ? "Mengirim..." : "Kirim Link"}
           </button>

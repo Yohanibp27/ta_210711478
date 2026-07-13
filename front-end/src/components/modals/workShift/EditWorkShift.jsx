@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
+import axiosIntance from "../../../api/axios.js";
 
 const EditWorkShift = () => {
   const [position, setPosition] = useState({
@@ -16,7 +17,8 @@ const EditWorkShift = () => {
   const handleChange = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/workshifts/${id}`, {
+      //   await axios.put(`http://localhost:3000/workshifts/${id}`, {
+      await axiosIntance.put(`/workshifts/${id}`, {
         name: position.name,
         // headOfPosition: position.headOfPosition,
       });
@@ -27,7 +29,8 @@ const EditWorkShift = () => {
   };
 
   const getPositionById = async () => {
-    const response = await axios.get(`http://localhost:3000/workshifts/${id}`);
+    // const response = await axios.get(`http://localhost:3000/workshifts/${id}`);
+    const response = await axiosIntance.get(`/workshifts/${id}`);
     setPosition(response.data.data);
   };
   return (

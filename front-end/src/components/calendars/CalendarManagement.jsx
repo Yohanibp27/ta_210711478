@@ -18,7 +18,7 @@ import {
   FaUserMd,
   FaFilePdf,
 } from "react-icons/fa";
-import axios from "axios";
+// import axios from "axios";
 import axiosInstance from "../../api/axios.js";
 
 const CalendarManagement = () => {
@@ -38,10 +38,6 @@ const CalendarManagement = () => {
     try {
       setLoading(true);
       const year = currentDate.getFullYear();
-      //   const response = await axios.get(
-      //     `http://localhost:3000/calendars?year=${year}`,
-      //     { headers: {Authorization: `Bearer ${token}`}},
-      //   );
       const response = await axiosInstance.get(`/calendars?year=${year}`);
       setHolidays(response.data.data);
     } catch (error) {
@@ -64,7 +60,6 @@ const CalendarManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus hari libur ini?")) {
       try {
-        // await axios.delete(`http://localhost:3000/calendars/${id}`);
         await axiosInstance.delete(`/calendars/${id}`);
         fetchHolidays();
       } catch (e) {
@@ -666,7 +661,7 @@ const AddCalendar = ({ isOpen, onClose, onSuccess }) => {
         repeatYearly: formData.repeatYearly,
       };
 
-      await axios.post("http://localhost:3000/calendars", payload, {
+      await axiosInstance.post("/calendars", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -920,13 +915,9 @@ const EditCalendar = ({ isOpen, onClose, onSuccess, holidayData }) => {
         repeat: formData.isRepeat,
       };
 
-      await axios.put(
-        `http://localhost:3000/calendars/${holidayData.id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await axiosInstance.put(`/calendars/${holidayData.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       alert("Berhasil memperbarui hari libur!");
       onSuccess();

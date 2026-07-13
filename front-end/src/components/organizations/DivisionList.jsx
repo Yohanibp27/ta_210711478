@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// import axios from "axios";
 import {
   FaAngleLeft,
   FaAngleRight,
@@ -11,7 +11,7 @@ import {
 import axiosInstance from "../../api/axios.js";
 
 const DivisionList = () => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [divisions, setDivisions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -400,7 +400,7 @@ export default DivisionList;
 
 // Modal tambah divisi
 const AddDivision = ({ isOpen, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [division, setDivision] = useState({
     name: "",
     departmentId: "",
@@ -529,7 +529,7 @@ const AddDivision = ({ isOpen, onClose, onSuccess }) => {
 
 // Modal edit divisi
 const EditDivision = ({ isOpen, id, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [division, setDivision] = useState({
     name: "",
     departmentId: "",

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../../../api/axios";
 
 const AddWorkShift = ({ onAdd }) => {
   const [shift, setShift] = useState({
@@ -10,22 +11,23 @@ const AddWorkShift = ({ onAdd }) => {
     tolerance: "",
   });
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:3000/workshifts",
+      const response = await axiosInstance.post(
+        // "http://localhost:3000/workshifts",
+        "/workshifts",
         {
           name: shift.name,
           startTime: shift.startTime,
           endTime: shift.endTime,
           tolerance: shift.tolerance || 0,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        // {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // }
       );
       console.log("Berhasil menambahkan jam kerja:", response.data);
       if (onAdd) onAdd();

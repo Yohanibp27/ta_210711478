@@ -4,7 +4,7 @@ import { FaTimes } from "react-icons/fa";
 import axiosInstance from "../../../api/axios.js";
 
 const EditUser = ({ isOpen, userData, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [roles, setRoles] = useState([]);
   const [workShifts, setWorkShifts] = useState([]);
   const [professions, setProfessions] = useState([]);
@@ -80,7 +80,7 @@ const EditUser = ({ isOpen, userData, onClose, onSuccess }) => {
       }
     };
     fetchDropdowns();
-  }, [token, userData, isOpen]);
+  }, [userData, isOpen]);
 
   useEffect(() => {
     if (user.employmentType === "Non-Shift") {
@@ -138,7 +138,7 @@ const EditUser = ({ isOpen, userData, onClose, onSuccess }) => {
       console.error("Error fetching user:", e);
       alert("Gagal mengambil data user");
     }
-  }, [token, userData?.id, allDivisions, allPositions]);
+  }, [userData?.id, allDivisions, allPositions]);
 
   useEffect(() => {
     if (allDivisions.length && allPositions.length) {

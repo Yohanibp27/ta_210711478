@@ -213,7 +213,7 @@ function Dashboard() {
       });
 
       const activeShiftsCount = shiftsOnlyToday.length;
-      console.log("Total Shift Hari Ini (Aktif):", activeShiftsCount);
+      //   console.log("Total Shift Hari Ini (Aktif):", activeShiftsCount);
 
       //   const isShiftActive = (startTime, endTime) => {
       //     if (!startTime || !endTime) return false;

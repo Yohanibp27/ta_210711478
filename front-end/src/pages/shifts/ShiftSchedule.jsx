@@ -69,7 +69,7 @@ const ScheduleRow = ({ staff, days, onClickShift, showOriginal }) => (
 );
 
 function ShiftSchedule() {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [scheduleData, setScheduleData] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("Semua");
@@ -131,7 +131,7 @@ function ShiftSchedule() {
   useEffect(() => {
     fetchData();
     fetchSchedule();
-  }, [token, startDate, showOriginal]);
+  }, [startDate, showOriginal]);
 
   const fetchData = async () => {
     setLoading(true);

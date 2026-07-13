@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/images/bhayangkara.png";
+import axiosInstance from "../../api/axios";
 
 function Login() {
   const [nip, setNip] = useState("");
@@ -12,49 +13,62 @@ function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ nip, password }),
-        credentials: "include",
-      });
+      //   const res = await fetch("http://localhost:3000/login", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({ nip, password }),
+      //     credentials: "include",
+      //   });
+      // const data = await res.json();
+      // if (!res.ok) {
+      //   alert(data.message || "Login gagal!");
+      //   return;
+      // }
 
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.message || "Login gagal!");
-        return;
-      }
+      const response = await axiosInstance.post("/login", {
+        nip,
+        password,
+      });
+      const data = response.data;
 
       localStorage.setItem("token", data.accessToken);
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("status", data.user.status);
       }
+
       localStorage.setItem("limited", data.limited ? "true" : "false");
-      localStorage.setItem("status", data.user.status);
+      //   localStorage.setItem("status", data.user.status);
 
       console.log("Data user (login frontend):", data);
       console.log("Token disimpan (login frontend):", data.accessToken);
 
-      if (data.user.status === "Cuti") {
+      if (data.user?.status === "Cuti") {
         alert("Anda sedang cuti. Beberapa fitur tidak dapat digunakan.");
-      } else if (data.user.status === "Nonaktif") {
+      } else if (data.user?.status === "Nonaktif") {
         alert(
           "Akun Anda tidak aktif. Hubungi admin untuk mengaktifkan kembali.",
         );
         setLoading(false);
         return;
       }
+
       setTimeout(() => {
         navigate("/dashboard");
       }, 1000);
     } catch (e) {
       console.error(e);
       console.log("response data:", e);
-      alert("Terjadi kesalahan server");
+      //   alert("Terjadi kesalahan server");
+      const message =
+        e.response?.data?.message || e.message || "Terjadi kesalahan server";
+      alert(message);
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     }
   };
   return (

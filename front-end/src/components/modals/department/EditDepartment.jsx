@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../../../api/axios.js";
 
 const EditDepartment = ({ id, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [department, setDepartment] = useState({
     name: "",
     // headOfDepartment: "",
@@ -14,14 +15,11 @@ const EditDepartment = ({ id, onClose, onSuccess }) => {
 
   const getDepartmentById = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:3000/departments/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const response = await axiosInstance.get(`/departments/${id}`, {
+        // headers: {
+        //   Authorization: `Bearer ${token}`,
+        // },
+      });
       setDepartment(response.data.data);
     } catch (e) {
       console.error("Gagal mengambil data departemen:", e);
@@ -31,16 +29,17 @@ const EditDepartment = ({ id, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(
-        `http://localhost:3000/departments/${id}`,
+      const response = await axiosInstance.put(
+        // `http://localhost:3000/departments/${id}`,
+        `/departments/${id}`,
         {
           name: department.name,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${token}`,
+        //   },
+        // },
       );
       console.log("Berhasil mengupdate departemen:", response.data);
       onSuccess();

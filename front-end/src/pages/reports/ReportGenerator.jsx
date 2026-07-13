@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 import { FaFileAlt } from "react-icons/fa";
 import axiosInstance from "../../api/axios";
 
@@ -51,7 +51,7 @@ const TemplateCard = ({ icon, title, description, color }) => {
 
 // const ReportGeneratorPage = ({ onGenerate }) => {
 const ReportGeneratorPage = () => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [historyList, setHistoryList] = useState([]);
   //   const [divisions, setDivisions] = useState([]);
   //   const [periode, setPeriode] = useState("Januari 2024");

@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   FaAngleLeft,
@@ -39,11 +38,6 @@ const LeaveTypeList = () => {
   const getLeaveTypes = async () => {
     setLoading(true);
     try {
-      //   const res = await axios.get("http://localhost:3000/leavetypes", {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   });
       const res = await axiosInstance.get("/leavetypes");
       setLeaves(res.data.data);
     } catch (e) {
@@ -55,16 +49,6 @@ const LeaveTypeList = () => {
 
   const handleToggleStatus = async (id, currentStatus) => {
     try {
-      //   await axios.patch(
-      //     `http://localhost:3000/leavetypes/${id}`,
-      //     { active: !currentStatus },
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${token}`,
-      //       },
-      //     },
-      //   );
-
       await axiosInstance.patch(`/leavetypes/${id}`, {
         active: !currentStatus,
       });
@@ -77,12 +61,6 @@ const LeaveTypeList = () => {
 
   const handleDelete = async (leaveId) => {
     try {
-      //   await axios.delete(`http://localhost:3000/leavetypes/${leaveId}`, {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   });
-
       await axiosInstance.delete(`/leavetypes/${leaveId}`);
       getLeaveTypes();
       alert("Jenis Pengajuan berhasil dihapus!");
@@ -374,8 +352,8 @@ const AddLeaveType = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:3000/leaveTypes",
+      await axiosInstance.post(
+        "/leaveTypes",
         { name: leaves.name, active: leaves.active },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -460,7 +438,7 @@ const EditLeaveType = ({ isOpen, id, onClose, onSuccess }) => {
 
   const getLeavesTypeId = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/leavetypes/${id}`, {
+      const res = await axiosInstance.get(`/leavetypes/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -474,8 +452,8 @@ const EditLeaveType = ({ isOpen, id, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(
-        `http://localhost:3000/leavetypes/${id}`,
+      const res = await axiosInstance.put(
+        `/leavetypes/${id}`,
         {
           name: levaes.name,
           active: levaes.active,

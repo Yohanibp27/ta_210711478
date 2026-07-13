@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../api/axios";
 import { jwtDecode } from "jwt-decode";
 
 const savedToken = localStorage.getItem("token");
@@ -25,9 +26,9 @@ export const LoginUser = createAsyncThunk(
   "user/login",
   async (user, thunkAPI) => {
     try {
-      const response = await axios.post("http://localhost:3000/login", {
-        email: user.email,
-        // nip: user.nip, // 30 April 26PERBAIKAN: Backend menggunakan nip
+      const response = await axiosInstance.post("/login", {
+        // email: user.email,
+        nip: user.nip, // 30 April 26 PERBAIKAN: Backend menggunakan nip
         password: user.password,
       });
       //   const token = response.data.token;
@@ -54,7 +55,7 @@ export const StayLoggedIn = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Token tidak ditemukan");
 
-      const response = await axios.get("http://localhost:3000/stay", {
+      const response = await axiosInstance.get("/stay", {
         headers: { Authorization: `Bearer ${token}` },
       });
 

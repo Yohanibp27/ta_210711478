@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// import axios from "axios";
 import {
   FaAngleLeft,
   FaAngleRight,
@@ -12,7 +12,7 @@ import axiosInstance from "../../api/axios.js";
 
 // loading masih ungu
 const ProfessionList = () => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [professions, setProfessions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState({ show: false, id: null });
@@ -349,7 +349,7 @@ export default ProfessionList;
 
 // Modal tambah profesi
 const AddProfession = ({ isOpen, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [profession, setProfession] = useState({
     name: "",
   });
@@ -450,7 +450,7 @@ const AddProfession = ({ isOpen, onClose, onSuccess }) => {
 
 // Modal edit profesi
 const EditProfession = ({ isOpen, id, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [profession, setProfession] = useState({
     name: "",
   });

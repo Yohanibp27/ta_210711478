@@ -1,10 +1,10 @@
-import axios from "axios";
+// import axios from "axios";
 import { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import axiosInstance from "../../../api/axios.js";
 
 const AddUser = ({ isOpen, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const today = new Date().toISOString().split("T")[0];
   const [departments, setDepartments] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -72,7 +72,7 @@ const AddUser = ({ isOpen, onClose, onSuccess }) => {
       }
     };
     fetchData();
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (user.employmentType === "Non-Shift") {
@@ -118,7 +118,7 @@ const AddUser = ({ isOpen, onClose, onSuccess }) => {
     };
 
     fetchDivisions();
-  }, [user.departmentId, token]);
+  }, [user.departmentId]);
 
   useEffect(() => {
     if (!user.divisionId) {
@@ -150,7 +150,7 @@ const AddUser = ({ isOpen, onClose, onSuccess }) => {
     };
 
     fetchPositions();
-  }, [user.divisionId, token]);
+  }, [user.divisionId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

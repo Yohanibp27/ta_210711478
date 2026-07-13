@@ -1,7 +1,8 @@
-import axios from "axios";
+// import axios from "axios";
 import { useState } from "react";
 // import '../../../style/AddAttendance.css';
 import "../AddAttendance.css";
+import axiosInstance from "../../../api/axios.js";
 
 const AddAttendance = () => {
   const token = localStorage.getItem("token");
@@ -27,10 +28,11 @@ const AddAttendance = () => {
   const searchUser = async (query) => {
     if (!query) return setSearchResults([]);
     try {
-      const res = await axios.get(
-        `http://localhost:3000/users/search?q=${query}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      //   const res = await axios.get(
+      //     `http://localhost:3000/users/search?q=${query}`,
+      //     { headers: { Authorization: `Bearer ${token}` } },
+      //   );
+      const res = await axiosInstance.get(`/users/search?q=${query}`);
       setSearchResults(res.data);
     } catch (err) {
       console.error(err);
@@ -110,8 +112,9 @@ const AddAttendance = () => {
     }
 
     try {
-      await axios.post(
-        "http://localhost:3000/attendances",
+      await axiosInstance.post(
+        // "http://localhost:3000/attendances",
+        "/attendances",
         {
           userId: attendance.userId,
           date: attendance.date || today,

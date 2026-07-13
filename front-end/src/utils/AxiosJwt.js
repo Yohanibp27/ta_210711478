@@ -84,10 +84,15 @@ import axios from "axios";
 //   return axiosJWT;
 // };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const getAxiosJWT = (getToken, setToken) => {
   const token = localStorage.getItem("token");
+
   const axiosJWT = axios.create({
-    baseURL: "http://localhost:3000",
+    // baseURL: "http://localhost:3000",
+    baseURL: API_URL,
+    withCredentials: true,
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -97,18 +102,30 @@ const getAxiosJWT = (getToken, setToken) => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
-      if (error.response?.status === 401 && !originalRequest._retry) {
+
+      if (
+        error.response?.status === 401 &&
+        originalRequest &&
+        !originalRequest._retry
+      ) {
         originalRequest._retry = true;
         try {
-          const res = await axios.get("http://localhost:3000/token", {
-            // withCredentials: true,
+          //   const res = await axios.get("http://localhost:3000/token", {
+          const res = await axios.get(`${API_URL}/token`, {
+            withCredentials: true,
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
           const newAccessToken = res.data.accessToken;
+
           setToken(newAccessToken); // update token di state atau localStorage
+          localStorage.setItem("token", newAccessToken);
+
+          axiosJWT.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
+
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+
           return axiosJWT(originalRequest);
         } catch (err) {
           localStorage.removeItem("token");
@@ -118,7 +135,7 @@ const getAxiosJWT = (getToken, setToken) => {
         }
       }
       return Promise.reject(error);
-    }
+    },
   );
 
   return axiosJWT;
@@ -126,40 +143,39 @@ const getAxiosJWT = (getToken, setToken) => {
 
 export default getAxiosJWT;
 
-
-  // axiosJWT.interceptors.response.use(
-  //   (response) => {
-  //     // cek header token baru
-  //     const newToken = response.headers["x-new-token"];
-  //     if (newToken) {
-  //       setToken(newToken);
-  //       localStorage.setItem("token", newToken);
-  //       response.config.headers["Authorization"] = `Bearer ${newToken}`;
-  //     }
-  //     return response;
-  //   },
-  //   async (error) => {
-  //     const originalRequest = error.config;
-  //     if (error.response?.status === 401 && !originalRequest._retry) {
-  //       originalRequest._retry = true;
-  //       try {
-  //         const res = await axios.get("http://localhost:3000/token", {
-  //           headers: {
-  //             Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //           },
-  //         });
-  //         const newAccessToken = res.data.accessToken;
-  //         setToken(newAccessToken);
-  //         localStorage.setItem("token", newAccessToken);
-  //         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-  //         return axiosJWT(originalRequest);
-  //       } catch (err) {
-  //         localStorage.removeItem("token");
-  //         localStorage.removeItem("user");
-  //         window.location.href = "/";
-  //         return Promise.reject(err);
-  //       }
-  //     }
-  //     return Promise.reject(error);
-  //   }
-  // );
+// axiosJWT.interceptors.response.use(
+//   (response) => {
+//     // cek header token baru
+//     const newToken = response.headers["x-new-token"];
+//     if (newToken) {
+//       setToken(newToken);
+//       localStorage.setItem("token", newToken);
+//       response.config.headers["Authorization"] = `Bearer ${newToken}`;
+//     }
+//     return response;
+//   },
+//   async (error) => {
+//     const originalRequest = error.config;
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true;
+//       try {
+//         const res = await axios.get("http://localhost:3000/token", {
+//           headers: {
+//             Authorization: `Bearer ${localStorage.getItem("token")}`,
+//           },
+//         });
+//         const newAccessToken = res.data.accessToken;
+//         setToken(newAccessToken);
+//         localStorage.setItem("token", newAccessToken);
+//         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+//         return axiosJWT(originalRequest);
+//       } catch (err) {
+//         localStorage.removeItem("token");
+//         localStorage.removeItem("user");
+//         window.location.href = "/";
+//         return Promise.reject(err);
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );

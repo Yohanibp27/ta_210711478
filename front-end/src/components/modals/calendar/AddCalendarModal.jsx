@@ -8,11 +8,11 @@ import {
   FaUsers,
   FaUserMd,
 } from "react-icons/fa";
-import axios from "axios";
+// import axios from "axios";
 import axiosInstance from "../../api/axios.js";
 
 const AddCalendar = ({ isOpen, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [formData, setFormData] = useState({
     description: "",
     date: "",

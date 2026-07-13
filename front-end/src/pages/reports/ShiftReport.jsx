@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import axios from "axios";
+// import axios from "axios";
 import { Link } from "react-router-dom";
 import { FaCloud, FaFileExcel, FaFilePdf, FaMoon, FaSun } from "react-icons/fa";
 import jsPDF from "jspdf";
@@ -17,7 +17,7 @@ const statusClassMap = {
 };
 
 const ShiftReport = () => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [shiftData, setShiftData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("Harian");
@@ -267,7 +267,6 @@ const ShiftReport = () => {
       setLoading(false);
     }
   }, [
-    token,
     filterType,
     selectedPeriod,
     startDate,

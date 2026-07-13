@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import avatar from "../../assets/avatar-user.jpg";
+// import avatar from "../../assets/avatar-user.jpg";
+import avatar from "../../assets/avatar-ungu.png";
 
 const UserProfile = () => {
   const { user } = useSelector((state) => state.auth);

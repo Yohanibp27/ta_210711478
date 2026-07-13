@@ -1,6 +1,8 @@
+import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv"; // kalo dihapus maka dotenv.config() di comment
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import path from "path";
@@ -9,7 +11,7 @@ import { fileURLToPath } from "url";
 import db from "./config/Database.js";
 import "./models/association.js";
 // import RefreshTokenRoute from "./router/RefreshTokenRoute.js";
-import qrRoute from "./router/qrRoute.js";
+// import qrRoute from "./router/qrRoute.js";
 
 import { autoAbsentJob } from "./utils/autoAbsentJob.js";
 import { autoExpireLeaveJob } from "./utils/autoExpireLeaveJob.js";
@@ -40,11 +42,18 @@ import MedicalActionRoute from "./router/MedicalActionRoute.js";
 import CalendarRoute from "./router/CalendarRoute.js";
 import ReportHistory from "./router/ReportHistoriesRoute.js";
 
-dotenv.config();
+// dotenv.config();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const isProduction = process.env.NODE_ENV === "production";
+const PORT = Number(process.env.PORT) || 3000;
+
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
 
 (async () => {
   await db.sync();
@@ -53,28 +62,62 @@ const __dirname = path.dirname(__filename);
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // sesuaikan dengan port frontend
+    origin: process.env.FRONTEND_URL,
+    // origin: "http://localhost:5173", // sesuaikan dengan port frontend
     // origin: "http://localhost:3000",
     credentials: true,
   }),
 );
+
+/*
+|--------------------------------------------------------------------------
+| Middleware dasar
+|--------------------------------------------------------------------------
+*/
 app.use(cookieParser());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(
   session({
-    secret: "yourSecretKey",
+    // secret: "yourSecretKey",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // true jika HTTPS
+      //   secure: false, // true jika HTTPS
+      secure: isProduction,
       httpOnly: true,
-      sameSite: "lax", // atau "none" jika cross-site
+      //   sameSite: "lax", // atau "none" jika cross-site
+      sameSite: isProduction ? "none" : "lax",
     },
   }),
 );
+
+/*
+|--------------------------------------------------------------------------
+| File upload
+|--------------------------------------------------------------------------
+*/
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+/*
+|--------------------------------------------------------------------------
+| Health check
+|--------------------------------------------------------------------------
+*/
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Backend berjalan",
+  });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Routes
+|--------------------------------------------------------------------------
+*/
 // app.use(express.json());
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(UserRoute);
 app.use(DepartmentRoute);
 app.use(PositionRoute);
@@ -98,7 +141,7 @@ app.use(CalendarRoute);
 app.use(ReportHistory);
 
 // app.use(RefreshTokenRoute);
-app.use(qrRoute);
+// app.use(qrRoute);
 // store.sync(); // membuat tabel session jika belum ada
 
 // Jalankan job cek presensi otomatis
@@ -111,8 +154,13 @@ autoLeaveCheckerJob();
 //   console.log("Server up and running ...");
 // });
 
-app.listen(3000, "0.0.0.0", () => {
-  console.log("Server up and running ... 17 April 2026");
+// app.listen(3000, "0.0.0.0", () => {
+//   console.log("Server up and running ... 17 April 2026");
+// });
+
+// 13 juli 2026
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server up and running on port ${PORT}`);
 });
 
 // pada terminal nodemon index.js atau nodemon index

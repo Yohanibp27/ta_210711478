@@ -1,4 +1,4 @@
-import axios from "axios";
+// import axios from "axios";
 import { useState, useEffect } from "react";
 import {
   FaAngleLeft,
@@ -11,7 +11,7 @@ import {
 import axiosInstance from "../../api/axios.js";
 
 const PositionList = () => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [positions, setPosition] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -401,7 +401,7 @@ export default PositionList;
 
 // Modal tambah posisi
 const AddPosition = ({ isOpen, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [position, setPosition] = useState({
     name: "",
     divisionId: "",
@@ -528,7 +528,7 @@ const AddPosition = ({ isOpen, onClose, onSuccess }) => {
 
 // Modal edit posisi
 const EditPosition = ({ isOpen, id, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [position, setPosition] = useState({
     name: "",
     divisionId: "",

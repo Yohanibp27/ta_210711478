@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../../api/axios";
 import Logo from "../../assets/images/bhayangkara.png";
 
 function ResetPassword() {
@@ -26,10 +27,11 @@ function ResetPassword() {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        `http://localhost:3000/reset-password/${token}`,
+      const res = await axiosInstance.post(
+        // `http://localhost:3000/reset-password/${token}`,
+        `/reset-password/${token}`,
         { password },
-        { headers: { "Content-Type": "application/json" } },
+        // { headers: { "Content-Type": "application/json" } },
       );
       console.log("Token:", token);
       setSuccess(res.data.message);

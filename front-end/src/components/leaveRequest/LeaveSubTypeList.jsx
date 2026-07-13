@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   FaAngleLeft,
@@ -39,12 +38,6 @@ const LeaveSubTypeList = () => {
   const getLeaveSubTypes = async () => {
     setLoading(true);
     try {
-      //   const res = await axios.get("http://localhost:3000/leavesubtypes", {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   });
-
       const res = await axiosInstance.get("/leavesubtypes");
       setLeaveSubs(res.data.data);
     } catch (e) {
@@ -56,12 +49,6 @@ const LeaveSubTypeList = () => {
 
   const handleDelete = async (leaveSubId) => {
     try {
-      //   await axios.delete(`http://localhost:3000/leavesubtypes/${leaveSubId}`, {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //   });
-
       await axiosInstance.delete(`/leavesubtypes/${leaveSubId}`);
       getLeaveSubTypes();
       alert("Jenis Sub Pengajuan berhasil dihapus!");
@@ -372,7 +359,7 @@ const AddLeaveSubType = ({ isOpen, onClose, onSuccess }) => {
   useEffect(() => {
     const fecthLeaveTypes = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/leavetypes", {
+        const res = await axiosInstance.get("/leavetypes", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -389,8 +376,8 @@ const AddLeaveSubType = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:3000/leavesubtypes",
+      await axiosInstance.post(
+        "/leavesubtypes",
         {
           name: leaveSubs.name,
           leaveTypeId: Number(leaveSubs.leaveTypeId),
@@ -572,14 +559,11 @@ const EditLeaveSubType = ({ isOpen, id, onClose, onSuccess }) => {
 
   const fetchLeaveSubType = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:3000/leavesubtypes/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await axiosInstance.get(`/leavesubtypes/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       if (response.data) setLeaveSubs(response.data.data);
     } catch (e) {
       console.error("Gagal ambil data sub pengajuan:", e);
@@ -588,7 +572,7 @@ const EditLeaveSubType = ({ isOpen, id, onClose, onSuccess }) => {
 
   const fetchLeaveSubTypeId = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/leavetypes", {
+      const res = await axiosInstance.get("/leavetypes", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -611,8 +595,8 @@ const EditLeaveSubType = ({ isOpen, id, onClose, onSuccess }) => {
       return;
     }
     try {
-      await axios.put(
-        `http://localhost:3000/leavesubtypes/${id}`,
+      await axiosInstance.put(
+        `/leavesubtypes/${id}`,
         {
           name: leaveSubs.name,
           leaveTypeId: Number(leaveSubs.leaveTypeId),

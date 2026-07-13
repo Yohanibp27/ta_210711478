@@ -1,9 +1,10 @@
 import { useState } from "react";
-import axios from "axios";
+// import axios from "axios";
 import { FaTimes } from "react-icons/fa";
+import axiosInstance from "../../../api/axios";
 
 const AddDepartment = ({ isOpen, onClose, onSuccess }) => {
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [department, setDepartment] = useState({
     name: "",
     // headOfDepartment: "",
@@ -12,12 +13,12 @@ const AddDepartment = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:3000/departments",
+      await axiosInstance.post(
+        "/departments",
         { name: department.name },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        // {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // },
       );
       alert("Departemen berhasil ditambahkan!");
       onSuccess();

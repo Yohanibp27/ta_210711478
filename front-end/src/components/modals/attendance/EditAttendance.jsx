@@ -85,8 +85,8 @@ const EditAttendance = ({ data, onClose, onSuccess }) => {
   const handleChange = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
-        `http://localhost:3000/attendances/${data}`,
+      await axiosInstance.put(
+        `/attendances/${data}`,
         {
           date: formData.date,
           checkInTime: formData.checkInTime,

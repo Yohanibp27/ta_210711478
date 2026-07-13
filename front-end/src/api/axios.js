@@ -16,8 +16,11 @@
 
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000",
+  //   baseURL: "http://localhost:3000",
+  baseURL: API_URL,
   withCredentials: true, // PENTING: agar cookie refreshToken terkirim
 });
 
@@ -41,7 +44,8 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       try {
         // Panggil endpoint refresh token
-        const res = await axios.get("http://localhost:3000/token", {
+        // const res = await axios.get("http://localhost:3000/token", {
+        const res = await axios.get(`${API_URL}/token`, {
           withCredentials: true,
         });
 
