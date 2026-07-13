@@ -99,13 +99,13 @@ function LeaveRequestHistory() {
       const isWasintern = dept.includes("subbag wasintern");
       const isManagerOrSupervisor = role === "manager" || role === "supervisor";
       if (role === "admin") {
-        endpoint = "http://localhost:3000/leave-requests";
+        endpoint = "/leave-requests";
       } else if (isManagerOrSupervisor && isWasintern) {
         // SDM (Wasintern)
-        endpoint = "http://localhost:3000/leave-requests";
+        endpoint = "/leave-requests";
       } else if (isManagerOrSupervisor) {
         // Manager/Supervisor biasa
-        endpoint = "http://localhost:3000/leave-requests/manager";
+        endpoint = "/leave-requests/manager";
       } else {
         return alert("Role tidak memiliki akses!");
       }
@@ -1147,7 +1147,8 @@ export default LeaveRequestHistory;
 const LeaveRequestModal = ({ show, onClose, data }) => {
   if (!show || !data) return null;
 
-  const FILE_BASE_URL = "http://localhost:3000/uploads/evidence/";
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const FILE_BASE_URL = `${API_BASE_URL}/uploads/evidence/`;
   const getApprovalLabel = (status) => {
     return formatStatus(status);
   };
