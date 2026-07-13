@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-// import axios from "axios";
 import { Link } from "react-router-dom";
 import AttendanceDetailModal from "../../components/modals/attendance/AttendanceDetailModal.jsx";
 import EditAttendance from "../../components/modals/attendance/EditAttendance.jsx";
@@ -32,7 +31,6 @@ import {
 import axiosInstance from "../../api/axios.js";
 
 function AttendanceHistory() {
-  //   const token = localStorage.getItem("token");
   const today = new Date().toISOString().split("T")[0];
   const endDate = new Date(new Date().setDate(new Date().getDate() + 7))
     .toISOString()
@@ -45,7 +43,14 @@ function AttendanceHistory() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [showEditModal, setShowEditModal] = useState(null);
-  const itemsPerPage = 5;
+  //   const itemsPerPage = 5;
+  const itemsPerPage = 10;
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalRows: 0,
+    limit: 10,
+  });
   const [filter, setFilter] = useState({
     karyawan: "semua",
     startDate: today,
@@ -75,7 +80,8 @@ function AttendanceHistory() {
   };
 
   useEffect(() => {
-    getAttendances();
+    // getAttendances();
+    fetchAttendanceHistory();
     fetchOrganizations();
   }, []);
 
@@ -93,12 +99,31 @@ function AttendanceHistory() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // const res = await axios.get("http://localhost:3000/attendances", {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        const res = await axiosInstance.get("/attendances");
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        setAttendance(data);
+        // const res = await axiosInstance.get("/attendances/history");
+        // const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+        // setAttendance(data);
+
+        const response = await axiosInstance.get("/attendances/history", {
+          params: {
+            page: currentPage,
+            limit: 10,
+            startDate: filter.startDate,
+            endDate: filter.endDate,
+            search_query: searchText,
+            status: statusFilter,
+          },
+        });
+        setAttendance(response.data.data || []);
+        setStatus({
+          total: { count: response.data.summary?.total || 0 },
+          hadir: { count: response.data.summary?.hadir || 0 },
+          terlambat: { count: response.data.summary?.terlambat || 0 },
+          izin: { count: response.data.summary?.izin || 0 },
+          tidakHadir: {
+            count: response.data.summary?.tidakHadir || 0,
+          },
+        });
+        setPagination(response.data.pagination);
 
         const start = new Date(filter.startDate);
         const end = new Date(filter.endDate);
@@ -179,28 +204,81 @@ function AttendanceHistory() {
     fetchData();
   }, [filter.startDate, filter.endDate]);
 
-  const getAttendances = async () => {
+  //   const getAttendances = async () => {
+  //     try {
+  //       const response = await axiosInstance.get("/attendances");
+  //       setAttendance(response.data.data || []);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   };
+
+  const fetchAttendanceHistory = async () => {
     try {
-      //   const response = await axios.get("http://localhost:3000/attendances", {
-      //     headers: {Authorization: `Bearer ${token}`},
-      //   });
-      const response = await axiosInstance.get("/attendances");
+      setLoading(true);
+
+      const response = await axiosInstance.get("/attendances/history", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          startDate: filter.startDate,
+          endDate: filter.endDate,
+          search_query: searchText,
+          status: statusFilter,
+        },
+      });
+
       setAttendance(response.data.data || []);
-    } catch (e) {
-      console.error(e);
+
+      setStatus({
+        total: {
+          count: response.data.summary?.total || 0,
+          growth: 0,
+        },
+        hadir: {
+          count: response.data.summary?.hadir || 0,
+          growth: 0,
+        },
+        terlambat: {
+          count: response.data.summary?.terlambat || 0,
+          growth: 0,
+        },
+        izin: {
+          count: response.data.summary?.izin || 0,
+          growth: 0,
+        },
+        tidakHadir: {
+          count: response.data.summary?.tidakHadir || 0,
+          growth: 0,
+        },
+      });
+
+      setPagination(
+        response.data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalRows: 0,
+          limit: itemsPerPage,
+        },
+      );
+    } catch (error) {
+      console.error(
+        "Gagal mengambil riwayat presensi:",
+        error.response?.data || error.message,
+      );
+
+      setAttendance([]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchAttendanceHistory();
+  }, [currentPage, filter.startDate, filter.endDate, statusFilter, searchText]);
+
   const fetchOrganizations = async () => {
     try {
-      //   const [deptRes, divRes] = await Promise.all([
-      //     axios.get("http://localhost:3000/departments", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/divisions", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //   ]);
       const [deptRes, divRes] = await Promise.all([
         axiosInstance.get("/departments"),
         axiosInstance.get("/divisions"),
@@ -214,11 +292,9 @@ function AttendanceHistory() {
 
   const handleDelete = async (id) => {
     try {
-      //   await axios.delete(`http://localhost:3000/attendances/${id}`, {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   });
       await axiosInstance.delete(`/attendances/${id}`);
-      getAttendances();
+      //   getAttendances();
+      fetchAttendanceHistory();
       alert("Data presensi berhasil dihapus!");
     } catch (e) {
       console.error(e);
@@ -360,32 +436,23 @@ function AttendanceHistory() {
     return 0;
   });
 
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-  const indexFirst = (currentPage - 1) * itemsPerPage;
-  const indexLast = indexFirst + itemsPerPage;
-  const paginatedData = sortedData.slice(indexFirst, indexLast);
+  //   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  //   const indexFirst = (currentPage - 1) * itemsPerPage;
+  //   const indexLast = indexFirst + itemsPerPage;
+  //   const paginatedData = sortedData.slice(indexFirst, indexLast);
+  const totalPages = pagination.totalPages;
+  const indexFirst = (currentPage - 1) * pagination.limit;
+  const indexLast = Math.min(
+    indexFirst + attendance.length,
+    pagination.totalRows,
+  );
+  const paginatedData = sortedData;
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
-
-  //   const getShiftFromAttendance = (attend) => {
-  //     const user = attend.user;
-  //     if (!user) return null;
-  //     if (user.employmentType === "Non-Shift") {
-  //       return user.workShift || null;
-  //     }
-  //     if (user.employmentType === "Shift") {
-  //       const targetDate = attend.date;
-  //       const shiftAssign = user.shiftAssignments?.find(
-  //         (sa) => sa.date === targetDate,
-  //       );
-  //       return shiftAssign?.workShift || null;
-  //     }
-  //     return null;
-  //   };
 
   const getShiftFromAttendance = (attend) => {
     const user = attend.user;
@@ -519,7 +586,8 @@ function AttendanceHistory() {
               <div className="stat-info-dash">
                 <span className="stat-label-dash">Total Presensi</span>
                 <span className="stat-value-dash">
-                  {filteredAttendance.length}
+                  {/* {filteredAttendance.length} */}
+                  {status.total.count}
                 </span>
                 {/* <span className="stat-value-dash">{status.total.count}</span>  <div className="stat-sub-dash">
                   <span className="stat-text-dash">
@@ -541,11 +609,12 @@ function AttendanceHistory() {
                       (a) => a.attendanceStatus === "Hadir",
                     ).length
                   } */}
-                  {
+                  {/* {
                     filteredAttendance.filter((a) =>
                       ["Hadir", "Dinas Luar"].includes(a.attendanceStatus),
                     ).length
-                  }
+                  } */}
+                  {status.hadir.count}
                 </span>
                 {/* <span className="stat-value-dash">{status.hadir.count}</span>
                 <div className="stat-sub-dash">
@@ -563,11 +632,12 @@ function AttendanceHistory() {
               <div className="stat-info-dash">
                 <span className="stat-label-dash">Terlambat</span>
                 <span className="stat-value-dash">
-                  {
+                  {/* {
                     filteredAttendance.filter(
                       (a) => a.attendanceStatus === "Terlambat",
                     ).length
-                  }
+                  } */}
+                  {status.terlambat.count}
                 </span>
                 {/* <span className="stat-value-dash">
                   {status.terlambat.count}
@@ -587,11 +657,12 @@ function AttendanceHistory() {
               <div className="stat-info-dash">
                 <span className="stat-label-dash">Izin</span>
                 <span className="stat-value-dash">
-                  {
+                  {/* {
                     filteredAttendance.filter((a) =>
                       ["Sakit", "Izin"].includes(a.attendanceStatus),
                     ).length
-                  }
+                  } */}
+                  {status.izin.count}
                 </span>
                 {/* <span className="stat-value-dash">{status.izin.count}</span>
                 <div className="stat-sub-dash">
@@ -609,11 +680,12 @@ function AttendanceHistory() {
               <div className="stat-info-dash">
                 <span className="stat-label-dash">Tidak Hadir</span>
                 <span className="stat-value-dash">
-                  {
+                  {/* {
                     filteredAttendance.filter(
                       (a) => a.attendanceStatus === "Tidak Hadir",
                     ).length
-                  }
+                  } */}
+                  {status.tidakHadir.count}
                 </span>
                 {/* <span className="stat-value-dash">
                   {status.tidakHadir.count}
@@ -676,7 +748,8 @@ function AttendanceHistory() {
         ) : (
           <>
             <div className="table-header-top">
-              <h3>Riwayat Presensi ({filteredAttendance.length})</h3>
+              {/* <h3>Riwayat Presensi ({filteredAttendance.length})</h3> */}
+              <h3>Riwayat Presensi ({pagination.totalRows})</h3>
               <div className="panel-actions-right">
                 <button
                   type="button"
@@ -850,8 +923,6 @@ function AttendanceHistory() {
               </table>
             </div>
           ) : (
-            // <div className="content-table">
-            //   <table className="table is-striped is-fullwidth is-hoverable userlist-table">
             <div className="table-content">
               <table className="content-table">
                 <thead>
@@ -922,35 +993,6 @@ function AttendanceHistory() {
                     return (
                       <tr key={attend.i || i}>
                         <td>{formatDateIndo(attend.date)}</td>
-                        {/* <td>
-                          <div className="user-cell">
-                            <img
-                              className="user-avatar"
-                              src={attend.user?.avatarUrl || Avatar}
-                              alt={
-                                attend.user?.fullName ||
-                                attend.user?.titlePrefix
-                              }
-                            />
-                            <div className="user-info">
-                              <strong className="user-name">
-                                {[
-                                  attend.user?.titlePrefix,
-                                  attend.user?.fullName,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ") ?? "-"}
-                              </strong>
-                              <span className="user-division">
-                                {attend.user?.nip} -{" "}
-                                {
-                                  attend.user?.position?.division?.department
-                                    .name
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        </td> */}
                         <td className="perf-name-cell">
                           <img
                             className="staff-avatar"
@@ -971,13 +1013,6 @@ function AttendanceHistory() {
                           </div>
                         </td>
                         <td>
-                          {/* <span
-                            className={`status-bagde ${attend.user?.workShift?.name.toLowerCase() === "pagi" ? "pagi" : attend.user?.workShift?.name.toLowerCase() === "siang" ? "siang" : "malam"}`}
-                          >
-                            {attend.user?.workShift?.name ||
-                              attend.user?.shiftAssignment?.workShift?.name ||
-                              "-"}
-                          </span> */}
                           <span
                             className={`status-badge ${
                               shiftName.toLowerCase() === "pagi"
@@ -1075,12 +1110,13 @@ function AttendanceHistory() {
           )}
         </div>
         {totalPages > 1 && (
-          //   <div className="history-footer">
           <div className="pag-footer-container">
             <div className="pag-footer-text">
-              Menampilkan {sortedData.length > 0 ? indexFirst + 1 : 0} -{" "}
+              {/* Menampilkan {sortedData.length > 0 ? indexFirst + 1 : 0} -{" "}
               {Math.min(indexLast, sortedData.length)} dari {sortedData.length}{" "}
-              data
+              data */}
+              Menampilkan {pagination.totalRows > 0 ? indexFirst + 1 : 0} -{" "}
+              {indexLast} dari {pagination.totalRows} data
             </div>
             <div className="center-pagination">
               <button
@@ -1145,7 +1181,8 @@ function AttendanceHistory() {
           data={showEditModal}
           onClose={() => setShowEditModal(null)}
           onSuccess={() => {
-            getAttendances();
+            // getAttendances();
+            fetchAttendanceHistory();
             setShowEditModal(null);
           }}
         />
@@ -1158,14 +1195,9 @@ export default AttendanceHistory;
 
 // Modal tambah presensi manual
 const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
-  //   const token = localStorage.getItem("token");
-  //   const [user, setUser] = useState([]);
-  //   const [userShifts, setUserShifts] = useState([]);
-  //   const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({
     userId: "",
     date: new Date().toISOString().split("T")[0],
-    // checkInTime: new Date().toLocaleTimeString("it-IT").substring(0, 5),
     checkInTime: formatToDatetimeLocalComplete(new Date()),
     checkOutTime: "",
     checkInLocation: "",
@@ -1177,11 +1209,6 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
   });
 
   const [users, setUsers] = useState([]);
-  //   const [loadingLocation, setLoadingLocation] = useState({
-  //     in: false,
-  //     out: false,
-  //   });
-
   useEffect(() => {
     if (isOpen) {
       fetchUsers();
@@ -1190,9 +1217,6 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
 
   const fetchUsers = async () => {
     try {
-      //   const res = await axios.get("http://localhost:3000/users", {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   });
       const res = await axiosInstance.get("/users");
       setUsers(res.data.data || []);
     } catch (err) {
@@ -1200,40 +1224,11 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
-  //   const handleGetLocation = (type) => {
-  //     setLoadingLocation({ ...loadingLocation, [type]: true });
-
-  //     if (!navigator.geolocation) {
-  //       alert("Geolocation tidak didukung oleh browser Anda");
-  //       setLoadingLocation({ ...loadingLocation, [type]: false });
-  //       return;
-  //     }
-
-  //     navigator.geolocation.getCurrentPosition(
-  //       (position) => {
-  //         const locString = `${position.coords.latitude}, ${position.coords.longitude}`;
-  //         setFormData((prev) => ({
-  //           ...prev,
-  //           [type === "in" ? "checkInLocation" : "checkOutLocation"]: locString,
-  //         }));
-  //         setLoadingLocation({ ...loadingLocation, [type]: false });
-  //       },
-  //       (error) => {
-  //         alert("Gagal mengambil lokasi: " + error.message);
-  //         setLoadingLocation({ ...loadingLocation, [type]: false });
-  //       },
-  //     );
-  //   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.userId) return alert("Pilih karyawan terlebih dahulu!");
 
     try {
-      //   await axios.post("http://localhost:3000/attendances", formData, {
-      //   await axios.post("http://localhost:3000/attendances/admin", formData, {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   });
       await axiosInstance.post("/attendances/admin", formData);
       alert("Presensi manual berhasil ditambahkan!");
       if (onSuccess) onSuccess();
@@ -1241,7 +1236,6 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
       setFormData({
         userId: "",
         date: new Date().toISOString().split("T")[0],
-        // checkInTime: new Date().toLocaleTimeString("it-IT").substring(0, 5),
         checkInTime: formatToDatetimeLocalComplete(new Date()),
         checkOutTime: "",
         checkInLocation: "",
@@ -1259,24 +1253,8 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  //   const fetchUserShifts = async (userId, date) => {
-  //     try {
-  //       const res = await axios.get(
-  //         `http://localhost:3000/shift-assignments/user/${userId}?date=${date}`,
-  //         {
-  //           headers: { Authorization: `Bearer ${token}` },
-  //         },
-  //       );
-  //       setUserShifts(res.data.data || []);
-  //     } catch (err) {
-  //       console.error("Gagal ambil jadwal shift:", err);
-  //       setUserShifts([]);
-  //     }
-  //   };
-
   return (
     <div className="modal-overlay">
-      {/* <div className="modal-user-card" style={{ maxWidth: "1000px" }}> */}
       <div className="modal-user-card">
         <div className="modal-header">
           <h3>Tambah Presensi Manual</h3>
@@ -1325,48 +1303,9 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
                     onChange={(e) =>
                       setFormData({ ...formData, date: e.target.value })
                     }
-                    // type="text"
-                    // value={formatDateIndo(formData.date)}
-                    // disabled
                   />
                 </div>
               </div>
-              {/* hanya tampil jika user yang dicari adalah user tipe shift */}
-              {/* {selectedUser?.employmentType === "Shift" && (
-                <div className="form-row" style={{ marginTop: "-10px" }}>
-                  <div className="form-column">
-                    <div
-                      className="notification-info"
-                      //   style={{
-                      //     background: "#e3f2fd",
-                      //     padding: "10px",
-                      //     borderRadius: "8px",
-                      //     fontSize: "0.85rem",
-                      //     borderLeft: "4px solid #2196f3",
-                      //     marginBottom: "15px",
-                      //   }}
-                    >
-                      <label>
-                        Jadwal Shift <span>*</span>
-                      </label>
-                      {userShifts.length > 0 ? (
-                        <ul style={{ marginTop: "5px", listStyle: "inside" }}>
-                          {userShifts.map((s, idx) => (
-                            <li key={idx}>
-                              {s.workShift.shiftName} ({s.workShift.startTime} -{" "}
-                              {s.workShift.endTime})
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p style={{ color: "red", marginTop: "5px" }}>
-                          User shift tidak memiliki jadwal shift hari ini!
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )} */}
             </div>
 
             <div className="form-row">
@@ -1423,66 +1362,6 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
                 </div>
               </div>
             </div>
-
-            {/* <div className="form-row">
-              <div className="form-column">
-                <div className="label-form">
-                  <label>
-                    Lokasi Masuk <span>*</span>
-                  </label>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="Koordinat lat, long"
-                      value={formData.checkInLocation}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          checkInLocation: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="button is-success"
-                      onClick={() => handleGetLocation("in")}
-                      disabled={loadingLocation.in}
-                    >
-                      <FaMapMarkerAlt /> {loadingLocation.in ? "..." : "Ambil"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="form-column">
-                <div className="label-form">
-                  <label>Lokasi Keluar</label>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <input
-                      type="text"
-                      className="input-field"
-                      placeholder="Koordinat lat, long"
-                      value={formData.checkOutLocation}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          checkOutLocation: e.target.value,
-                        })
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="button is-warning"
-                      onClick={() => handleGetLocation("out")}
-                      disabled={loadingLocation.out}
-                    >
-                      <FaMapMarkerAlt /> {loadingLocation.out ? "..." : "Ambil"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div> */}
 
             <div className="form-row">
               <div className="form-column">

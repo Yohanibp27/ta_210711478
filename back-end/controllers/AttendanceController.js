@@ -236,6 +236,255 @@ export const getAttendances = async (req, res) => {
   }
 };
 
+export const getAttendanceHistory = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit, 10) || 10, 1),
+      50,
+    );
+    const offset = (page - 1) * limit;
+
+    // const startDate =
+    //   req.query.startDate || dayjs().startOf("month").format("YYYY-MM-DD");
+    // const endDate =
+    //   req.query.endDate || dayjs().endOf("month").format("YYYY-MM-DD");
+
+    // const search = req.query.search_query?.trim() || "";
+    // const statusFilter = req.query.status || "all";
+
+    // const where = {
+    //   date: {
+    //     [Op.between]: [startDate, endDate],
+    //   },
+    // };
+
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        message: "Tanggal mulai dan tanggal akhir wajib diisi",
+      });
+    }
+
+    if (!dayjs(startDate).isValid() || !dayjs(endDate).isValid()) {
+      return res.status(400).json({
+        message: "Format tanggal tidak valid",
+      });
+    }
+
+    if (dayjs(endDate).isBefore(dayjs(startDate))) {
+      return res.status(400).json({
+        message: "Tanggal akhir tidak boleh sebelum tanggal mulai",
+      });
+    }
+
+    const search = req.query.search_query?.trim() || "";
+    const statusFilter = req.query.status || "all";
+
+    const where = {
+      date: {
+        [Op.between]: [startDate, endDate],
+      },
+    };
+
+    if (statusFilter !== "all" && statusFilter !== "Semua Status") {
+      where.attendanceStatus = statusFilter;
+    }
+
+    if (!["Admin", "Supervisor", "Manager", "Super Admin"].includes(req.role)) {
+      where.userId = req.userId;
+    }
+
+    const userWhere = search
+      ? {
+          [Op.or]: [
+            {
+              fullName: {
+                [Op.like]: `%${search}%`,
+              },
+            },
+            {
+              nip: {
+                [Op.like]: `%${search}%`,
+              },
+            },
+          ],
+        }
+      : undefined;
+
+    const { count, rows } = await Attendances.findAndCountAll({
+      where,
+      distinct: true,
+      limit,
+      offset,
+      attributes: [
+        "id",
+        "userId",
+        "date",
+        "checkInTime",
+        "checkOutTime",
+        "checkInLocation",
+        "checkOutLocation",
+        "attendanceStatus",
+        "notes",
+        "source",
+        "leaveRequestId",
+        "workShiftId",
+        "checkInEvidencePhoto",
+        "checkOutEvidencePhoto",
+      ],
+      include: [
+        {
+          model: Users,
+          where: userWhere,
+          required: Boolean(search),
+          attributes: [
+            "id",
+            "titlePrefix",
+            "fullName",
+            "nip",
+            "email",
+            "profilePhoto",
+            "employmentType",
+          ],
+          include: [
+            {
+              model: Position,
+              attributes: ["id", "name"],
+              include: [
+                {
+                  model: Division,
+                  attributes: ["id", "name"],
+                  include: [
+                    {
+                      model: Department,
+                      attributes: ["id", "name"],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: Profession,
+              attributes: ["id", "name"],
+            },
+            {
+              model: WorkShift,
+              attributes: ["id", "name", "startTime", "endTime"],
+            },
+            {
+              model: Role,
+              attributes: ["id", "name"],
+            },
+
+            /*
+             * Tetap menyediakan user.shiftAssignments untuk frontend,
+             * tetapi dijalankan sebagai query terpisah agar tidak
+             * menggandakan baris presensi.
+             */
+            {
+              model: ShiftAssignment,
+              separate: true,
+              attributes: ["id", "userId", "workShiftId", "date"],
+              where: {
+                date: {
+                  [Op.between]: [startDate, endDate],
+                },
+              },
+              include: [
+                {
+                  model: WorkShift,
+                  attributes: ["id", "name", "startTime", "endTime"],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          model: LeaveRequest,
+          attributes: [
+            "id",
+            "userId",
+            "leaveTypeId",
+            "leaveSubTypeId",
+            "startDate",
+            "endDate",
+            "note",
+            "status",
+          ],
+        },
+      ],
+      order: [
+        ["date", "DESC"],
+        ["id", "DESC"],
+      ],
+    });
+
+    // Statistik seluruh rentang tanggal, bukan hanya 10 data halaman aktif.
+    const statusRows = await Attendances.findAll({
+      where,
+      attributes: [
+        "attendanceStatus",
+        [Sequelize.fn("COUNT", Sequelize.col("attendances.id")), "total"],
+      ],
+      group: ["attendanceStatus"],
+      raw: true,
+    });
+
+    const statusMap = {};
+
+    statusRows.forEach((item) => {
+      statusMap[item.attendanceStatus] = Number(item.total) || 0;
+    });
+
+    const backendUrl = (
+      process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`
+    ).replace(/\/$/, "");
+
+    const data = rows.map((attendance) => {
+      const item = attendance.toJSON();
+
+      if (item.user) {
+        item.user.avatarUrl = item.user.profilePhoto
+          ? `${backendUrl}/uploads/profilePhotos/${item.user.profilePhoto}`
+          : null;
+      }
+
+      return item;
+    });
+
+    return res.status(200).json({
+      message: "Berhasil mengambil riwayat presensi",
+      data,
+      summary: {
+        total: count,
+        hadir: (statusMap.Hadir || 0) + (statusMap["Dinas Luar"] || 0),
+        terlambat: statusMap.Terlambat || 0,
+        izin:
+          (statusMap.Izin || 0) +
+          (statusMap.Sakit || 0) +
+          (statusMap.Cuti || 0),
+        tidakHadir: statusMap["Tidak Hadir"] || 0,
+      },
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalRows: count,
+        limit,
+      },
+    });
+  } catch (error) {
+    console.error("Gagal mengambil riwayat presensi:", error);
+
+    return res.status(500).json({
+      message: "Gagal mengambil riwayat presensi",
+      error: error.message,
+    });
+  }
+};
+
 // hanya admin, admin super, supervisor, dan manager
 export const getAttendanceById = async (req, res) => {
   try {

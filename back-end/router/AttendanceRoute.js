@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAttendances,
+  getAttendanceHistory,
   getAttendanceById,
   createAttendance,
   updateAttendance,
@@ -24,6 +25,7 @@ import multer from "multer";
 const upload = multer();
 
 router.get("/attendances", verifyUser, getAttendances);
+router.get("/attendances/history", verifyUser, getAttendanceHistory);
 router.get("/attendances/search", verifyUser, getAttendanceByNipOrName);
 router.get("/attendances/me", verifyUser, getMyAttedances);
 router.get("/attendances/:id", verifyUser, getAttendanceById);
