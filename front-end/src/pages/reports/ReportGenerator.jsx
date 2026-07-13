@@ -4,6 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { FaFileAlt } from "react-icons/fa";
 import axiosInstance from "../../api/axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+const getReportFileUrl = (fileUrl) => {
+  if (!fileUrl) return "";
+
+  if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+    return fileUrl;
+  }
+
+  return `${API_BASE_URL}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
+};
+
 const TemplateCard = ({ icon, title, description, color }) => {
   const navigate = useNavigate();
   const iconStyle = {
@@ -315,7 +327,8 @@ const ReportGeneratorPage = () => {
                     {report.fileUrl && report.fileUrl !== "" ? (
                       <>
                         <a
-                          href={`http://localhost:3000${report.fileUrl}`}
+                          //   href={`http://localhost:3000${report.fileUrl}`}
+                          href={getReportFileUrl(report.fileUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="action-link"
@@ -325,7 +338,7 @@ const ReportGeneratorPage = () => {
                         </a>{" "}
                         |
                         <a
-                          href={`http://localhost:3000${report.fileUrl}`}
+                          href={getReportFileUrl(report.fileUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="action-link"
