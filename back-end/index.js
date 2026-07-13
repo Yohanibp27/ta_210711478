@@ -55,9 +55,22 @@ if (isProduction) {
   app.set("trust proxy", 1);
 }
 
+// (async () => {
+//   await db.sync();
+//   console.log("✅ Running Database...");
+// })();
+
 (async () => {
-  await db.sync();
-  console.log("✅ Running Database...");
+  try {
+    await db.authenticate();
+
+    if (!isProduction) {
+      await db.sync();
+    }
+  } catch (e) {
+    console.error("❌ Database connection failed:", e);
+    process.exit(1);
+  }
 })();
 
 app.use(
