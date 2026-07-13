@@ -90,6 +90,7 @@ const UserActivity = db.define(
   {
     freezeTableName: true,
     updatedAt: false, // tidak perlu kolom updatedAt
+    tableName: "useractivities",
   },
 );
 
