@@ -40,7 +40,8 @@ import GeoFence from "./router/GeoFenceRoute.js";
 import QrRoute from "./router/qrRoute.js";
 import MedicalActionRoute from "./router/MedicalActionRoute.js";
 import CalendarRoute from "./router/CalendarRoute.js";
-import ReportHistory from "./router/ReportHistoriesRoute.js";
+import ReportHistoriesRoute from "./router/ReportHistoriesRoute.js";
+import NotificationRoute from "./router/NotificationRoute.js";
 
 // dotenv.config();
 
@@ -151,7 +152,8 @@ app.use(GeoFence);
 app.use(QrRoute);
 app.use(MedicalActionRoute);
 app.use(CalendarRoute);
-app.use(ReportHistory);
+app.use(ReportHistoriesRoute);
+app.use(NotificationRoute);
 
 // app.use(RefreshTokenRoute);
 // app.use(qrRoute);

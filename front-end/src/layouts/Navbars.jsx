@@ -10,7 +10,7 @@ import axiosInstance from "../api/axios";
 
 const Navbar = ({ onToggleMobile }) => {
   //   const dispatch = useDispatch(); // Memanggil hook useDispatch agar 'dispatch' bisa digunakan
-  const token = localStorage.getItem("token");
+  //   const token = localStorage.getItem("token");
   const [isOpen, setIsOpen] = useState(false);
   const [openNotif, setOpenNotif] = useState(false);
   const reduxAuth = useSelector((state) => state.auth);
@@ -25,74 +25,179 @@ const Navbar = ({ onToggleMobile }) => {
   const location = useLocation();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  //   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+  const [notificationTotal, setNotificationTotal] = useState(0);
 
-  const statusMap = {
-    pending: "Menunggu",
-    pending_manager: "Menunggu",
-    approved_manager: "Disetujui",
-    approved_sdm: "Disetujui",
-    rejected_manager: "Ditolak",
-    rejected_sdm: "Ditolak",
-  };
+  //   const statusMap = {
+  //     pending: "Menunggu",
+  //     pending_manager: "Menunggu",
+  //     approved_manager: "Disetujui",
+  //     approved_sdm: "Disetujui",
+  //     rejected_manager: "Ditolak",
+  //     rejected_sdm: "Ditolak",
+  //   };
+
+  //   const fetchAllNotifications = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const [resExchange, resLeave] = await Promise.all([
+  //         axiosInstance.get("/all-shift-exchanges"),
+  //         axiosInstance.get("/leave-requests"),
+  //       ]);
+
+  //       const oneWeekAgo = new Date();
+  //       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  //       const exchanges = resExchange.data.data
+  //         .filter((item) => {
+  //           const itemDate = new Date(item.createdAt);
+  //           const isPending = item.status.toLowerCase() === "pending";
+  //           const isRecent = itemDate >= oneWeekAgo;
+  //           return isPending && isRecent;
+  //         })
+  //         .map((item) => ({
+  //           id: `ex-${item.id}`,
+  //           title: "Permintaan Tukar Shift",
+  //           desc: `${item.requester?.fullName} ingin tukar shift`,
+  //           time: item.createdAt,
+  //           link: "/shift-exchanges",
+  //         }));
+
+  //       const leaves = resLeave.data.data
+  //         .filter((item) => {
+  //           const itemDate = new Date(item.createdAt);
+  //           const mappedStatus =
+  //             statusMap[item.status.toLowerCase()] || statusMap[item.status];
+  //           const isPending = mappedStatus === "Menunggu";
+  //           const isRecent = itemDate >= oneWeekAgo;
+  //           return isPending && isRecent;
+  //         })
+  //         .map((item) => ({
+  //           id: `lv-${item.id}`,
+  //           title: `Pengajuan ${item.leavetype?.name}`,
+  //           desc: `${item.user?.fullName} mengajukan izin`,
+  //           time: item.createdAt,
+  //           link: "/leave-request-history",
+  //         }));
+
+  //       const combined = [...exchanges, ...leaves].sort(
+  //         (a, b) => new Date(b.time) - new Date(a.time),
+  //       );
+
+  //       setNotifications(combined);
+  //     } catch (err) {
+  //       console.error("Gagal mengambil notifikasi", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   const fetchAllNotifications = async () => {
+  //     // if (!token) return;
+
+  //     setLoading(true);
+
+  //     try {
+  //       const [exchangeResult, leaveResult] = await Promise.allSettled([
+  //         axiosInstance.get("/all-shift-exchanges"),
+  //         axiosInstance.get("/leave-requests"),
+  //       ]);
+
+  //       const exchangeData =
+  //         exchangeResult.status === "fulfilled" &&
+  //         Array.isArray(exchangeResult.value.data?.data)
+  //           ? exchangeResult.value.data.data
+  //           : [];
+
+  //       const leaveData =
+  //         leaveResult.status === "fulfilled" &&
+  //         Array.isArray(leaveResult.value.data?.data)
+  //           ? leaveResult.value.data.data
+  //           : [];
+
+  //       const oneWeekAgo = new Date();
+  //       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  //       const exchanges = exchangeData
+  //         .filter((item) => {
+  //           const itemDate = new Date(item.createdAt);
+  //           const itemStatus = (item.status || "").toLowerCase();
+
+  //           return itemStatus === "pending" && itemDate >= oneWeekAgo;
+  //         })
+  //         .slice(0, 20)
+  //         .map((item) => ({
+  //           id: `ex-${item.id}`,
+  //           title: "Permintaan Tukar Shift",
+  //           desc: `${item.requester?.fullName || "Karyawan"} ingin tukar shift`,
+  //           time: item.createdAt,
+  //           link: "/shift-exchanges",
+  //         }));
+
+  //       const leaves = leaveData
+  //         .filter((item) => {
+  //           const itemDate = new Date(item.createdAt);
+  //           const itemStatus = (item.status || "").toLowerCase();
+  //           const mappedStatus = statusMap[itemStatus];
+
+  //           return mappedStatus === "Menunggu" && itemDate >= oneWeekAgo;
+  //         })
+  //         .slice(0, 20)
+  //         .map((item) => ({
+  //           id: `lv-${item.id}`,
+  //           title: `Pengajuan ${item.leavetype?.name || "Izin"}`,
+  //           desc: `${item.user?.fullName || "Karyawan"} mengajukan izin`,
+  //           time: item.createdAt,
+  //           link: "/leave-request-history",
+  //         }));
+
+  //       const combined = [...exchanges, ...leaves]
+  //         .sort((a, b) => new Date(b.time) - new Date(a.time))
+  //         .slice(0, 20);
+
+  //       setNotifications(combined);
+  //       setNotificationsLoaded(true);
+  //     } catch (error) {
+  //       console.error(
+  //         "Gagal mengambil notifikasi:",
+  //         error.response?.data || error.message,
+  //       );
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   useEffect(() => {
+  //     if (token) fetchAllNotifications();
+  //   }, [token]);
 
   const fetchAllNotifications = async () => {
-    setLoading(true);
     try {
-      const [resExchange, resLeave] = await Promise.all([
-        axiosInstance.get("/all-shift-exchanges"),
-        axiosInstance.get("/leave-requests"),
-      ]);
-
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const exchanges = resExchange.data.data
-        .filter((item) => {
-          const itemDate = new Date(item.createdAt);
-          const isPending = item.status.toLowerCase() === "pending";
-          const isRecent = itemDate >= oneWeekAgo;
-          return isPending && isRecent;
-        })
-        .map((item) => ({
-          id: `ex-${item.id}`,
-          title: "Permintaan Tukar Shift",
-          desc: `${item.requester?.fullName} ingin tukar shift`,
-          time: item.createdAt,
-          link: "/shift-exchanges",
-        }));
-
-      const leaves = resLeave.data.data
-        .filter((item) => {
-          const itemDate = new Date(item.createdAt);
-          const mappedStatus =
-            statusMap[item.status.toLowerCase()] || statusMap[item.status];
-          const isPending = mappedStatus === "Menunggu";
-          const isRecent = itemDate >= oneWeekAgo;
-          return isPending && isRecent;
-        })
-        .map((item) => ({
-          id: `lv-${item.id}`,
-          title: `Pengajuan ${item.leavetype?.name}`,
-          desc: `${item.user?.fullName} mengajukan izin`,
-          time: item.createdAt,
-          link: "/leave-request-history",
-        }));
-
-      const combined = [...exchanges, ...leaves].sort(
-        (a, b) => new Date(b.time) - new Date(a.time),
+      setLoading(true);
+      const response = await axiosInstance.get("/notifications");
+      setNotifications(
+        Array.isArray(response.data?.data) ? response.data.data : [],
       );
-
-      setNotifications(combined);
-    } catch (err) {
-      console.error("Gagal mengambil notifikasi", err);
+      setNotificationTotal(Number(response.data?.total) || 0);
+    } catch (error) {
+      console.error(
+        "Gagal mengambil notifikasi:",
+        error.response?.data || error.message,
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) fetchAllNotifications();
-  }, [token]);
+    fetchAllNotifications();
+
+    const intervalId = setInterval(() => {
+      fetchAllNotifications();
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -368,6 +473,16 @@ const Navbar = ({ onToggleMobile }) => {
     });
   };
 
+  //   const handleNotificationClick = async () => {
+  //     const willOpen = !openNotif;
+
+  //     setOpenNotif(willOpen);
+
+  //     if (willOpen && !notificationsLoaded) {
+  //       await fetchAllNotifications();
+  //     }
+  //   };
+
   return (
     <nav className="navbar">
       <div className="nav-left">
@@ -405,16 +520,27 @@ const Navbar = ({ onToggleMobile }) => {
           <FiBell
             size={22}
             className="notif-icon"
-            onClick={() => setOpenNotif(!openNotif)}
+            // onClick={() => setOpenNotif(!openNotif)}
+            // onClick={handleNotificationClick}
+            onClick={() => setOpenNotif((prev) => !prev)}
           />
-          {notifications.length > 0 && (
+          {/* {notifications.length > 0 && (
             <span className="notif-badge">{notifications.length}</span>
+          )} */}
+          {notificationTotal > 0 && (
+            <span className="notif-badge">
+              {notificationTotal > 99 ? "99+" : notificationTotal}
+            </span>
           )}
           {openNotif && (
             <div className="notif-dropdown">
               <div className="notif-header">
                 Notifikasi
-                <span className="notif-refresh" onClick={fetchAllNotifications}>
+                <span
+                  className="notif-refresh"
+                  //   onClick={fetchAllNotifications}
+                  onClick={fetchAllNotifications}
+                >
                   Refresh
                 </span>
               </div>
