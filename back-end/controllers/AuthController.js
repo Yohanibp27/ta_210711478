@@ -18,12 +18,14 @@ import { Op } from "sequelize";
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_RESET_SECRET = process.env.JWT_RESET_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
 
 export const verifyToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (!token) return res.status(401).json({ message: "Token tidak ditemukan!" });
+  if (!token)
+    return res.status(401).json({ message: "Token tidak ditemukan!" });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -167,7 +169,7 @@ export const Login = async (req, res) => {
       status: currentStatus, // Gunakan status dinamis yang baru dicek
       profilePhoto: user.profilePhoto,
       avatarUrl: user.profilePhoto
-        ? `http://localhost:3000/uploads/profilePhotos/${user.profilePhoto}`
+        ? `${BACKEND_URL}/uploads/profilePhotos/${user.profilePhoto}`
         : null,
     };
     console.log("data user ketika login (backend)", payload);
@@ -335,7 +337,7 @@ export const StayLoggedIn = async (req, res) => {
 
     const userData = user.toJSON();
     userData.avatarUrl = userData.profilePhoto
-      ? `http://localhost:3000/uploads/profilePhotos/${userData.profilePhoto}`
+      ? `${BACKEND_URL}/uploads/profilePhotos/${userData.profilePhoto}`
       : null;
 
     res.status(200).json({ message: "Sesi valid", data: userData });
@@ -493,7 +495,7 @@ export const RefreshToken = async (req, res) => {
             status: user.status,
             profilePhoto: user.profilePhoto,
             avatarUrl: user.profilePhoto
-              ? `http://localhost:3000/uploads/profilePhotos/${user.profilePhoto}`
+              ? `${BACKEND_URL}/uploads/profilePhotos/${user.profilePhoto}`
               : null,
           },
           process.env.JWT_SECRET,

@@ -15,7 +15,7 @@ export const verifyUser = async (req, res, next) => {
       .json({ message: "Silakan masuk untuk mengakses halaman ini" });
   }
   const token = authHeader.split(" ")[1];
-  console.log("token yg diterima (backend):", authHeader);
+  //   console.log("token yg diterima (backend):", authHeader);
   if (!token) {
     return res.status(401).json({ message: "Token tidak ditemukan!" });
   }

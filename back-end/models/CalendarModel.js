@@ -53,6 +53,7 @@ const CalendarDay = db.define(
   },
   {
     freezeTableName: true,
+    tableName: "calendardays",
   },
 );
 

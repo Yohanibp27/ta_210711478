@@ -108,7 +108,10 @@ const ShiftExchange = db.define(
       defaultValue: "pending",
     },
   },
-  { freezeTableName: true },
+  {
+    freezeTableName: true,
+    tableName: "shiftexchanges",
+  },
 );
 
 User.hasMany(ShiftExchange, {

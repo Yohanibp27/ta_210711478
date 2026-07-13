@@ -28,7 +28,8 @@ const WorkShift = db.define(
   },
   {
     freezeTableName: true,
-  }
+    tableName: "workshifts",
+  },
 );
 
 Users.belongsTo(WorkShift, {
