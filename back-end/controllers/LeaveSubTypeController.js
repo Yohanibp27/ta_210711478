@@ -1,7 +1,7 @@
 // LANJUT TA (BELUM DIAPA-APAIN)
 // HANYA ADMIN YANG ATUR
 
-import LeaveSubType from "../models/LeaveSubtypeModel.js";
+import LeaveSubType from "../models/LeaveSubTypeModel.js";
 import LeaveType from "../models/LeaveTypeModel.js";
 
 export const getLeaveSubTypes = async (req, res) => {

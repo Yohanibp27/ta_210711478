@@ -3,7 +3,7 @@ import { Sequelize } from "sequelize";
 import db from "../config/Database.js";
 import User from "./UserModel.js";
 import Leavetype from "./LeaveTypeModel.js";
-import LeaveSubtype from "./LeaveSubtypeModel.js";
+import LeaveSubType from "./LeaveSubTypeModel.js";
 
 const { DataTypes } = Sequelize;
 
@@ -128,8 +128,8 @@ LeaveRequest.belongsTo(Leavetype, {
   as: "leavetype",
 }); // satu pengajuan hanya milik satu jenis pengajuan
 
-LeaveSubtype.hasMany(LeaveRequest, { foreignKey: "leaveSubTypeId" }); // satu sub jenis pengajuan bisa punya banyak pengajuan
-LeaveRequest.belongsTo(LeaveSubtype, {
+LeaveSubType.hasMany(LeaveRequest, { foreignKey: "leaveSubTypeId" }); // satu sub jenis pengajuan bisa punya banyak pengajuan
+LeaveRequest.belongsTo(LeaveSubType, {
   foreignKey: "leaveSubTypeId",
   as: "leavesubtype",
 }); // satu pengajuan hanya milik satu sub jenis pengajuan

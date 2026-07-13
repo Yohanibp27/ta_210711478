@@ -2,7 +2,7 @@
 import { Sequelize } from "sequelize";
 import db from "../config/Database.js";
 import User from "./UserModel.js";
-import LeaveSubType from "./LeaveSubtypeModel.js";
+import LeaveSubType from "./LeaveSubTypeModel.js";
 
 const { DataTypes } = Sequelize;
 

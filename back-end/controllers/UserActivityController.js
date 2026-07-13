@@ -8,7 +8,7 @@ import Position from "../models/PositionModel.js";
 import Division from "../models/DivisionModel.js";
 import Department from "../models/DepartmentModel.js";
 import LeaveType from "../models/LeaveTypeModel.js";
-import LeaveSubType from "../models/LeaveSubtypeModel.js";
+import LeaveSubType from "../models/LeaveSubTypeModel.js";
 import { Sequelize } from "sequelize";
 import ShiftAssignment from "../models/ShiftAssignmentModel.js";
 import WorkShift from "../models/WorkShiftModel.js";

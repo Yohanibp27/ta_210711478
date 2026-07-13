@@ -9,7 +9,7 @@ import Attendance from "./AttendanceModel.js";
 import Profession from "./ProfessionModel.js";
 import ShiftExchange from "./ShiftExchangeModel.js";
 import LeaveType from "./LeaveTypeModel.js";
-import LeaveSubType from "./LeaveSubtypeModel.js";
+import LeaveSubType from "./LeaveSubTypeModel.js";
 import LeaveRequest from "./LeaveRequestModel.js";
 import UserActivity from "./UserActivityModel.js";
 

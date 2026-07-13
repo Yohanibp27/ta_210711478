@@ -1,6 +1,6 @@
 import LeaveRequest from "../models/LeaveRequestModel.js";
 import LeaveType from "../models/LeaveTypeModel.js";
-import LeaveSubtype from "../models/LeaveSubtypeModel.js";
+import LeaveSubType from "../models/LeaveSubTypeModel.js";
 import { Op } from "sequelize";
 import dayjs from "dayjs";
 
@@ -21,7 +21,7 @@ export const isUserOnLeave = async (userId, date) => {
         attributes: ["id", "name"],
         include: [
           {
-            model: LeaveSubtype,
+            model: LeaveSubType,
             as: "leavesubtypes",
             attributes: ["id", "name"],
           },

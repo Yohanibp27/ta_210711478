@@ -5,7 +5,7 @@ import Division from "../models/DivisionModel.js";
 import Department from "../models/DepartmentModel.js";
 import Profession from "../models/ProfessionModel.js";
 import LeaveType from "../models/LeaveTypeModel.js";
-import LeaveSubType from "../models/LeaveSubtypeModel.js";
+import LeaveSubType from "../models/LeaveSubTypeModel.js";
 import { Op } from "sequelize";
 import UserActivity from "../models/UserActivityModel.js";
 import db from "../config/Database.js";

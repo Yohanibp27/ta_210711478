@@ -7,7 +7,7 @@ const { DataTypes } = Sequelize;
 
 // sub dari jenis pengajuan
 // semua daftar: izin, cuti, dinas luar
-const LeaveSubtype = db.define(
+const LeaveSubType = db.define(
   "leavesubtypes",
   {
     name: {
@@ -64,17 +64,17 @@ const LeaveSubtype = db.define(
   },
 );
 
-LeaveType.hasMany(LeaveSubtype, {
+LeaveType.hasMany(LeaveSubType, {
   foreignKey: "leaveTypeId",
   //   onUpdate: "CASCADE",
   //   onDelete: "RESTRICT",
   as: "leavesubtypes",
 }); // satu jenis pengajuan bisa punya banyak sub
-LeaveSubtype.belongsTo(LeaveType, {
+LeaveSubType.belongsTo(LeaveType, {
   foreignKey: "leaveTypeId",
   as: "leavetype",
 }); // satu sub hanya milik satu jenis pengajuan
 
-export default LeaveSubtype;
+export default LeaveSubType;
 
 // Atribut requireEvidence, allowSameDay, dan cutoffHour digunakan untuk merepresentasikan kebijakan pengajuan izin yang berbeda pada setiap jenis izin, sehingga aturan sistem dapat dikelola secara dinamis tanpa perubahan kode aplikasi.

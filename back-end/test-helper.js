@@ -1,5 +1,5 @@
 import { isUserOnLeave } from "./helpers/isUserOnLeave.js";
-// import { LeaveRequest, LeaveType, LeaveSubtype } from "../index.js";
+// import { LeaveRequest, LeaveType, LeaveSubType } from "../index.js";
 
 async function testHelper() {
   try {
