@@ -69,6 +69,7 @@ const UserLeaveQuota = db.define(
   },
   {
     freezeTableName: true,
+    tableName: "userleavequotas",
   },
 );
 
