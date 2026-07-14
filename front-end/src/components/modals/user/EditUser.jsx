@@ -1,5 +1,5 @@
-import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+// import axios from "axios";
+import { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import axiosInstance from "../../../api/axios.js";
 
@@ -27,60 +27,39 @@ const EditUser = ({ isOpen, userData, onClose, onSuccess }) => {
     }
   };
 
-  useEffect(() => {
-    if (!isOpen || !userData) return;
+  //   useEffect(() => {
+  //     if (!isOpen || !userData) return;
 
-    const fetchDropdowns = async () => {
-      try {
-        // const [rl, ws, pf, ps, dv, dp] = await Promise.all([
-        //   axios.get("http://localhost:3000/roles", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }),
-        //   axios.get("http://localhost:3000/workshifts", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }),
-        //   axios.get("http://localhost:3000/professions", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }),
-        //   axios.get("http://localhost:3000/positions", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }),
-        //   axios.get("http://localhost:3000/divisions", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }),
-        //   axios.get("http://localhost:3000/departments", {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }),
-        // ]);
+  //     const fetchDropdowns = async () => {
+  //       try {
+  //         const [rl, ws, pf, ps, dv, dp] = await Promise.all([
+  //           axiosInstance.get("/roles"),
+  //           axiosInstance.get("/workshifts"),
+  //           axiosInstance.get("/professions"),
+  //           axiosInstance.get("/positions"),
+  //           axiosInstance.get("/divisions"),
+  //           axiosInstance.get("/departments"),
+  //         ]);
 
-        const [rl, ws, pf, ps, dv, dp] = await Promise.all([
-          axiosInstance.get("/roles"),
-          axios.get("/workshifts"),
-          axiosInstance.get("/professions"),
-          axiosInstance.get("/positions"),
-          axiosInstance.get("/divisions"),
-          axiosInstance.get("/departments"),
-        ]);
+  //         setRoles(rl.data?.data || []);
+  //         setWorkShifts(ws.data?.data || []);
+  //         setProfessions(pf.data?.data || []);
+  //         setAllPositions(ps.data?.data || []);
+  //         setAllDivisions(dv.data?.data || []);
+  //         setDepartments(dp.data?.data || []);
 
-        setRoles(rl.data?.data || []);
-        setWorkShifts(ws.data?.data || []);
-        setProfessions(pf.data?.data || []);
-        setAllPositions(ps.data?.data || []);
-        setAllDivisions(dv.data?.data || []);
-        setDepartments(dp.data?.data || []);
-
-        // set divisions & positions sesuai userData
-        const depId = userData.departmentId || "";
-        const divId = userData.divisionId || "";
-        setDivisions(dv.data?.data.filter((d) => d.departmentId === depId));
-        setPositions(ps.data?.data.filter((p) => p.divisionId === divId));
-      } catch (err) {
-        console.error(err);
-        alert("Gagal memuat dropdown");
-      }
-    };
-    fetchDropdowns();
-  }, [userData, isOpen]);
+  //         // set divisions & positions sesuai userData
+  //         const depId = userData.departmentId || "";
+  //         const divId = userData.divisionId || "";
+  //         setDivisions(dv.data?.data.filter((d) => d.departmentId === depId));
+  //         setPositions(ps.data?.data.filter((p) => p.divisionId === divId));
+  //       } catch (err) {
+  //         console.error(err);
+  //         alert("Gagal memuat dropdown");
+  //       }
+  //     };
+  //     fetchDropdowns();
+  //   }, [userData, isOpen]);
 
   useEffect(() => {
     if (user.employmentType === "Non-Shift") {
@@ -96,86 +75,259 @@ const EditUser = ({ isOpen, userData, onClose, onSuccess }) => {
     }
   }, [user.employmentType, workShifts]);
 
-  const getUserById = useCallback(async () => {
-    if (!userData?.id) return;
+  //   const getUserById = useCallback(async () => {
+  //     if (!userData?.id) return;
 
-    try {
-      //   const response = await axios.get(
-      //     `http://localhost:3000/users/${userData.id}`,
-      //     {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     },
-      //   );
+  //     try {
+  //       const response = await axiosInstance.get(`/users/${userData.id}`);
 
-      const response = await axiosInstance.get(`/users/${userData.id}`);
+  //       const data = response.data?.data;
+  //       const depId = data.position?.division?.department?.id || "";
+  //       const divId = data.position?.division?.id || "";
+  //       const posId = data.position?.id || "";
 
-      const data = response.data?.data;
-      const depId = data.position?.division?.department?.id || "";
-      const divId = data.position?.division?.id || "";
-      const posId = data.position?.id || "";
+  //       setUser({
+  //         titlePrefix: data.titlePrefix || "",
+  //         fullName: data.fullName || "",
+  //         titleSuffix: data.titleSuffix || "",
+  //         nip: data.nip || "",
+  //         departmentId: depId,
+  //         divisionId: divId,
+  //         positionId: posId,
+  //         professionId: data.professionId || "",
+  //         email: data.email || "",
+  //         phone: data.phone || "",
+  //         joinDate: formatDate(data.joinDate),
+  //         workShiftId: data.workShiftId || "",
+  //         employmentType: data.employmentType || "Non-Shift",
+  //         status: data.status || "Aktif",
+  //         roleId: data.roleId || "",
+  //         password: "",
+  //       });
+  //       setDivisions(allDivisions.filter((d) => d.departmentId === depId));
+  //       setPositions(allPositions.filter((p) => p.divisionId === divId));
+  //     } catch (e) {
+  //       console.error("Error fetching user:", e);
+  //       alert("Gagal mengambil data user");
+  //     }
+  //   }, [userData?.id, allDivisions, allPositions]);
 
-      setUser({
-        titlePrefix: data.titlePrefix || "",
-        fullName: data.fullName || "",
-        titleSuffix: data.titleSuffix || "",
-        nip: data.nip || "",
-        departmentId: depId,
-        divisionId: divId,
-        positionId: posId,
-        professionId: data.professionId || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        joinDate: formatDate(data.joinDate),
-        workShiftId: data.workShiftId || "",
-        employmentType: data.employmentType || "Non-Shift",
-        status: data.status || "Aktif",
-        roleId: data.roleId || "",
-        password: "",
-      });
-      setDivisions(allDivisions.filter((d) => d.departmentId === depId));
-      setPositions(allPositions.filter((p) => p.divisionId === divId));
-    } catch (e) {
-      console.error("Error fetching user:", e);
-      alert("Gagal mengambil data user");
-    }
-  }, [userData?.id, allDivisions, allPositions]);
+  //   useEffect(() => {
+  //     if (allDivisions.length && allPositions.length) {
+  //       getUserById();
+  //     }
+  //   }, [allDivisions, allPositions, getUserById]);
 
   useEffect(() => {
-    if (allDivisions.length && allPositions.length) {
-      getUserById();
-    }
-  }, [allDivisions, allPositions, getUserById]);
+    if (!isOpen || !userData?.id) return;
 
-  const handleDropdownChange = (e) => {
-    const { name, value } = e.target;
+    let isCancelled = false;
+
+    const getResponseArray = (response) => {
+      if (Array.isArray(response.data?.data)) {
+        return response.data.data;
+      }
+
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
+    };
+
+    const loadEditData = async () => {
+      try {
+        const [
+          roleResponse,
+          workShiftResponse,
+          professionResponse,
+          positionResponse,
+          divisionResponse,
+          departmentResponse,
+          userResponse,
+        ] = await Promise.all([
+          axiosInstance.get("/roles"),
+          axiosInstance.get("/workshifts"),
+          axiosInstance.get("/professions"),
+          axiosInstance.get("/positions"),
+          axiosInstance.get("/divisions"),
+          axiosInstance.get("/departments"),
+          axiosInstance.get(`/users/${userData.id}`),
+        ]);
+
+        if (isCancelled) return;
+
+        const roleList = getResponseArray(roleResponse);
+        const workShiftList = getResponseArray(workShiftResponse);
+        const professionList = getResponseArray(professionResponse);
+        const positionList = getResponseArray(positionResponse);
+        const divisionList = getResponseArray(divisionResponse);
+        const departmentList = getResponseArray(departmentResponse);
+
+        const data = userResponse.data?.data;
+
+        if (!data) {
+          throw new Error("Data pengguna tidak ditemukan");
+        }
+
+        /*
+         * Mengantisipasi perbedaan nama association Sequelize:
+         * position atau Position
+         * division atau Division
+         * department atau Department
+         */
+        const positionData = data.position || data.Position || null;
+
+        const divisionData =
+          positionData?.division || positionData?.Division || null;
+
+        const departmentData =
+          divisionData?.department || divisionData?.Department || null;
+
+        const departmentId = departmentData?.id || "";
+        const divisionId = divisionData?.id || "";
+        const positionId = positionData?.id || data.positionId || "";
+
+        setRoles(roleList);
+        setWorkShifts(workShiftList);
+        setProfessions(professionList);
+        setAllPositions(positionList);
+        setAllDivisions(divisionList);
+        setDepartments(departmentList);
+
+        setDivisions(
+          divisionList.filter(
+            (division) =>
+              Number(division.departmentId) === Number(departmentId),
+          ),
+        );
+
+        setPositions(
+          positionList.filter(
+            (position) => Number(position.divisionId) === Number(divisionId),
+          ),
+        );
+
+        setUser({
+          titlePrefix: data.titlePrefix || "",
+          fullName: data.fullName || "",
+          titleSuffix: data.titleSuffix || "",
+          nip: data.nip || "",
+          departmentId,
+          divisionId,
+          positionId,
+          professionId: data.professionId || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          joinDate: formatDate(data.joinDate),
+          workShiftId: data.workShiftId || "",
+          employmentType: data.employmentType || "Non-Shift",
+          status: data.status || "Aktif",
+          roleId: data.roleId || "",
+          profilePhoto: data.profilePhoto || null,
+          avatarUrl: data.avatarUrl || null,
+          password: "",
+        });
+      } catch (error) {
+        console.error(
+          "Gagal memuat data edit karyawan:",
+          error.response?.data || error.message,
+        );
+
+        alert(
+          error.response?.data?.message ||
+            error.message ||
+            "Gagal memuat data edit karyawan",
+        );
+      }
+    };
+
+    loadEditData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen, userData?.id]);
+
+  //   const handleDropdownChange = (e) => {
+  //     const { name, value } = e.target;
+
+  //     if (name === "department") {
+  //       const depId = parseInt(value);
+  //       setUser({
+  //         ...user,
+  //         departmentId: depId,
+  //         divisionId: "",
+  //         positionId: "",
+  //       });
+  //       setDivisions(allDivisions.filter((div) => div.departmentId === depId));
+  //       setPositions([]);
+  //     }
+
+  //     if (name === "division") {
+  //       const divId = parseInt(value);
+  //       setUser({
+  //         ...user,
+  //         divisionId: divId,
+  //         positionId: "",
+  //       });
+  //       setPositions(allPositions.filter((pos) => pos.divisionId === divId));
+  //     }
+
+  //     if (name === "position") {
+  //       setUser({
+  //         ...user,
+  //         positionId: parseInt(value),
+  //       });
+  //     }
+  //   };
+
+  const handleDropdownChange = (event) => {
+    const { name, value } = event.target;
 
     if (name === "department") {
-      const depId = parseInt(value);
-      setUser({
-        ...user,
-        departmentId: depId,
+      const departmentId = Number(value);
+
+      setUser((previous) => ({
+        ...previous,
+        departmentId,
         divisionId: "",
         positionId: "",
-      });
-      setDivisions(allDivisions.filter((div) => div.departmentId === depId));
+      }));
+
+      setDivisions(
+        allDivisions.filter(
+          (division) => Number(division.departmentId) === departmentId,
+        ),
+      );
+
       setPositions([]);
+      return;
     }
 
     if (name === "division") {
-      const divId = parseInt(value);
-      setUser({
-        ...user,
-        divisionId: divId,
+      const divisionId = Number(value);
+
+      setUser((previous) => ({
+        ...previous,
+        divisionId,
         positionId: "",
-      });
-      setPositions(allPositions.filter((pos) => pos.divisionId === divId));
+      }));
+
+      setPositions(
+        allPositions.filter(
+          (position) => Number(position.divisionId) === divisionId,
+        ),
+      );
+
+      return;
     }
 
     if (name === "position") {
-      setUser({
-        ...user,
-        positionId: parseInt(value),
-      });
+      setUser((previous) => ({
+        ...previous,
+        positionId: Number(value),
+      }));
     }
   };
 
@@ -633,8 +785,16 @@ const EditUser = ({ isOpen, userData, onClose, onSuccess }) => {
                       type="file"
                       className="input-field"
                       accept="image/*"
-                      onChange={(e) => {
-                        setUser({ ...user, profilePhoto: e.target.files[0] });
+                      //   onChange={(e) => {
+                      //     setUser({ ...user, profilePhoto: e.target.files[0] });
+                      //   }}
+                      onChange={(event) => {
+                        const selectedFile = event.target.files?.[0];
+                        if (!selectedFile) return;
+                        setUser((previous) => ({
+                          ...previous,
+                          profilePhoto: selectedFile,
+                        }));
                       }}
                     />
                   </div>

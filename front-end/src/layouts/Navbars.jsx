@@ -19,6 +19,35 @@ const Navbar = ({ onToggleMobile }) => {
   const currentUser =
     reduxUser && Object.keys(reduxUser).length > 0 ? reduxUser : localUser;
 
+  const backendUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
+  const getAvatarUrl = (avatarUrl) => {
+    if (!avatarUrl) return AvatarUrl;
+
+    const value = String(avatarUrl).trim();
+
+    // Perbaiki URL lama yang masih mengarah ke localhost
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value)) {
+      try {
+        const parsedUrl = new URL(value);
+
+        return backendUrl ? `${backendUrl}${parsedUrl.pathname}` : AvatarUrl;
+      } catch {
+        return AvatarUrl;
+      }
+    }
+
+    // URL lengkap yang sudah benar, misalnya Cloudinary atau Railway
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    // Path relatif dari backend, misalnya /uploads/avatar.jpg
+    const normalizedPath = value.startsWith("/") ? value : `/${value}`;
+
+    return backendUrl ? `${backendUrl}${normalizedPath}` : AvatarUrl;
+  };
+  const profileAvatarUrl = getAvatarUrl(currentUser?.avatarUrl);
+
   const dropDownRef = useRef(null);
   const notifRef = useRef(null);
   const navigate = useNavigate();

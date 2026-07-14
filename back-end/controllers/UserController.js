@@ -10,6 +10,25 @@ import Profession from "../models/ProfessionModel.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+const getBackendUrl = (req) => {
+  return (
+    process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+  ).replace(/\/$/, "");
+};
+
+const addAvatarUrl = (user, req) => {
+  const data =
+    typeof user?.get === "function" ? user.get({ plain: true }) : { ...user };
+
+  data.avatarUrl = data.profilePhoto
+    ? `${getBackendUrl(req)}/uploads/profilePhotos/${encodeURIComponent(
+        data.profilePhoto,
+      )}`
+    : null;
+
+  return data;
+};
+
 export const getProfile = async (req, res) => {
   try {
     const user = await User.findOne({
@@ -27,13 +46,17 @@ export const getProfile = async (req, res) => {
         "status",
         "employmentType",
         "workShiftId",
+        "profilePhoto",
       ],
       include: [Position, Role, WorkShift, Profession],
     });
 
     if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    const userData = addAvatarUrl(user, req);
 
-    res.status(200).json({ message: "Berhasil mengambil profil", data: user });
+    res
+      .status(200)
+      .json({ message: "Berhasil mengambil profil", data: userData });
   } catch (e) {
     res
       .status(500)
@@ -96,14 +119,15 @@ export const getUsers = async (req, res) => {
     }
 
     // avatarUrl untuk user
-    const usersWithAvatar = response.map((user) => {
-      //   const u = user.toJSON();
-      const u = user.get({ plain: true });
-      u.avatarUrl = u.profilePhoto
-        ? `http://localhost:3000/uploads/profilePhotos/${u.profilePhoto}`
-        : null;
-      return u;
-    });
+    // const usersWithAvatar = response.map((user) => {
+    //   //   const u = user.toJSON();
+    //   const u = user.get({ plain: true });
+    //   u.avatarUrl = u.profilePhoto
+    //     ? `http://localhost:3000/uploads/profilePhotos/${u.profilePhoto}`
+    //     : null;
+    //   return u;
+    // });
+    const usersWithAvatar = response.map((user) => addAvatarUrl(user, req));
 
     res.status(200).json({
       message: "Berhasil menampilkan semua data user",
@@ -170,10 +194,12 @@ export const getUserById = async (req, res) => {
       return res.status(404).json({ message: "User tidak ditemukan" });
     }
 
-    const userData = response.toJSON();
-    userData.avatarUrl = userData.profilePhoto
-      ? `http://localhost:3000/uploads/profilePhotos/${userData.profilePhoto}`
-      : null;
+    // const userData = response.toJSON();
+    // userData.avatarUrl = userData.profilePhoto
+    //   ? `http://localhost:3000/uploads/profilePhotos/${userData.profilePhoto}`
+    //   : null;
+
+    const userData = addAvatarUrl(response, req);
 
     if (!response)
       return res.status(404).json({ message: "User tidak ditemukan" });
@@ -208,46 +234,6 @@ export const createUser = async (req, res) => {
       roleId,
       password,
     } = req.body;
-
-    // if (
-    //   !nip ||
-    //   !fullName ||
-    //   !positionId ||
-    //   !professionId ||
-    //   !email ||
-    //   !phone ||
-    //   !joinDate ||
-    //   !employmentType ||
-    //   !status ||
-    //   !roleId ||
-    //   !password
-    // ) {
-    //   return res.status(400).json({ message: "Semua field harus diisi!" });
-    // }
-    // if (!["Aktif", "Cuti", "Nonaktif"].includes(status)) {
-    //   return res.status(400).json({ message: "Status tidak valid!" });
-    // }
-    // if (!["Shift", "Non-Shift"].includes(employmentType)) {
-    //   return res.status(400).json({ message: "Tipe Karyawan tidak valid!" });
-    // }
-
-    // if (password.length < 8) {
-    //   return res.status(400).json({ message: "Password minimal 8 karakter~" });
-    // } else if (password.length > 15) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Password maksimal 15 karakter~" });
-    // } else if (!password) {
-    //   return res.status(400).json({ message: "Password tidak boleh kosong!" });
-    // } else {
-    //   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
-    //   if (!passwordRegex.test(password)) {
-    //     return res.status(400).json({
-    //       message:
-    //         "Password harus mengandung minimal satu huruf besar, satu huruf kecil, dan satu angka",
-    //     });
-    //   }
-    // }
 
     if (!nip) {
       return res.status(400).json({ message: "NIP wajib diisi!" });
@@ -310,14 +296,16 @@ export const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    const userData = newUser.toJSON();
-    userData.avatarUrl = profilePhotoPath
-      ? `http://localhost:3000/uploads/profilePhotos/${profilePhotoPath}`
-      : null;
+    // const userData = newUser.toJSON();
+    // userData.avatarUrl = profilePhotoPath
+    //   ? `http://localhost:3000/uploads/profilePhotos/${profilePhotoPath}`
+    //   : null;
+    const userData = addAvatarUrl(newUser, req);
 
     res.status(201).json({
       message: "Berhasil menambahkan user",
-      data: newUser,
+      //   data: newUser,
+      data: userData,
     });
   } catch (e) {
     console.error("Create user error:", e);
@@ -426,10 +414,12 @@ export const updateUser = async (req, res) => {
         },
       ],
     });
+    const userData = addAvatarUrl(updatedData, req);
 
     res.status(200).json({
       message: "Berhasil mengubah data user",
-      data: updatedData,
+      // data: updatedData,
+      data: userData,
     });
   } catch (e) {
     console.error(e);
@@ -585,14 +575,16 @@ export const updateUserByMobile = async (req, res) => {
     });
 
     // const updatedUser = await User.findByPk(req.params.id);
-    const userData = updatedUser.toJSON();
-    userData.avatarUrl = userData.profilePhoto
-      ? `http://localhost:3000/uploads/profilePhotos/${userData.profilePhoto}`
-      : null;
+    // const userData = updatedUser.toJSON();
+    // userData.avatarUrl = userData.profilePhoto
+    //   ? `http://localhost:3000/uploads/profilePhotos/${userData.profilePhoto}`
+    //   : null;
+    const userData = addAvatarUrl(updatedUser, req);
 
     res.status(200).json({
       message: "Berhasil mengubah data user",
-      data: updatedUser,
+      //   data: updatedUser,
+      data: userData,
     });
   } catch (e) {
     console.error(e);
