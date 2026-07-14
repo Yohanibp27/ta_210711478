@@ -74,6 +74,8 @@ if (isProduction) {
   }
 })();
 
+console.log("FRONTEND_URL:", JSON.stringify(process.env.FRONTEND_URL));
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
