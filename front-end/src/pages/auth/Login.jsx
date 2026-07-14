@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../../assets/images/bhayangkara.png";
 import axiosInstance from "../../api/axios";
 
@@ -41,7 +41,6 @@ function Login() {
 
       localStorage.setItem("limited", data.limited ? "true" : "false");
       //   localStorage.setItem("status", data.user.status);
-
       //   console.log("Data user (login frontend):", data);
       //   console.log("Token disimpan (login frontend):", data.accessToken);
 
@@ -113,7 +112,8 @@ function Login() {
             />
           </div>
           <div className="forgot-password">
-            <a href="/forgot-password">Lupa Password?</a>
+            {/* <a href="/forgot-password">Lupa Password?</a> */}
+            <Link to="/forgot-password">Lupa Password</Link>
           </div>
 
           <button type="submit" className="button-login" disabled={loading}>
