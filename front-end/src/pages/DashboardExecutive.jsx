@@ -1746,13 +1746,29 @@ const WorkloadAnalysis = () => {
     <div className="content-page">
       <section className="status-grid-sect">
         {loading ? (
-          [...Array(4)].map((_, i) => (
-            <div key={i} className="stat-card-dash">
+          //   [...Array(4)].map((_, i) => (
+          //     <div key={i} className="stat-card-dash">
+          //       <div className="stat-info-dash">
+          //         <div
+          //           className="skeleton-text"
+          //           style={{ width: "120px", height: "16px" }}
+          //         ></div>
+          //         <div
+          //           className="skeleton-text"
+          //           style={{ width: "80px", height: "32px", margin: "10px 0" }}
+          //         ></div>
+          //         <div
+          //           className="skeleton-text"
+          //           style={{ width: "120px", height: "12px" }}
+          //         ></div>
+          //       </div>
+          //       <div className="stat-icon-dash skeleton-icon"></div>
+          //     </div>
+          //   ))
+          <>
+            <div className="stat-card-dash">
               <div className="stat-info-dash">
-                <div
-                  className="skeleton-text"
-                  style={{ width: "120px", height: "16px" }}
-                ></div>
+                <span className="stat-label-dash">Total Tindakan Medis</span>
                 <div
                   className="skeleton-text"
                   style={{ width: "80px", height: "32px", margin: "10px 0" }}
@@ -1762,9 +1778,59 @@ const WorkloadAnalysis = () => {
                   style={{ width: "120px", height: "12px" }}
                 ></div>
               </div>
-              <div className="stat-icon-dash skeleton-icon"></div>
+              <div className="stat-icon-dash purple-light-dash">
+                <FaUserMd />
+              </div>
             </div>
-          ))
+            <div className="stat-card-dash">
+              <div className="stat-info-dash">
+                <span className="stat-label-dash">Total Jam Kehadiran</span>
+                <div
+                  className="skeleton-text"
+                  style={{ width: "80px", height: "32px", margin: "10px 0" }}
+                ></div>
+                <div
+                  className="skeleton-text"
+                  style={{ width: "120px", height: "12px" }}
+                ></div>
+              </div>
+              <div className="stat-icon-dash green-light-dash">
+                <FaClock />
+              </div>
+            </div>
+            <div className="stat-card-dash">
+              <div className="stat-info-dash">
+                <span className="stat-label-dash">Total Pasien Ditangani</span>
+                <div
+                  className="skeleton-text"
+                  style={{ width: "80px", height: "32px", margin: "10px 0" }}
+                ></div>
+                <div
+                  className="skeleton-text"
+                  style={{ width: "120px", height: "12px" }}
+                ></div>
+              </div>
+              <div className="stat-icon-dash blue-light-dash">
+                <FaUserInjured />
+              </div>
+            </div>
+            <div className="stat-card-dash">
+              <div className="stat-info-dash">
+                <span className="stat-label-dash">Rata-rata Beban Kerja</span>
+                <div
+                  className="skeleton-text"
+                  style={{ width: "80px", height: "32px", margin: "10px 0" }}
+                ></div>
+                <div
+                  className="skeleton-text"
+                  style={{ width: "120px", height: "12px" }}
+                ></div>
+              </div>
+              <div className="stat-icon-dash orange-light-dash">
+                <FaChartBar />
+              </div>
+            </div>
+          </>
         ) : (
           <>
             <div className="stat-card-dash">
