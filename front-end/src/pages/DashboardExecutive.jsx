@@ -2393,18 +2393,20 @@ const WorkloadAnalysis = () => {
               </span>{" "}
               atau{" "}
               <span className="text-danger-bold">
-                {(
-                  (dashboardData.workload.reduce(
-                    (acc, curr) => acc + (curr.outOfShift || 0),
-                    0,
-                  ) /
-                    dashboardData.workload.reduce(
-                      (acc, curr) =>
-                        acc + (curr.validActivity + curr.outOfShift),
+                {formatDecimalID(
+                  (
+                    (dashboardData.workload.reduce(
+                      (acc, curr) => acc + (curr.outOfShift || 0),
                       0,
-                    )) *
-                  100
-                ).toFixed(1)}
+                    ) /
+                      dashboardData.workload.reduce(
+                        (acc, curr) =>
+                          acc + (curr.validActivity + curr.outOfShift),
+                        0,
+                      )) *
+                    100
+                  ).toFixed(1),
+                )}
                 %
               </span>{" "}
               dari total tindakan medis .{" "}
