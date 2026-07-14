@@ -107,6 +107,39 @@ app.use(
   }),
 );
 
+const getMemoryUsageMb = () => {
+  const memory = process.memoryUsage();
+
+  return {
+    heapUsed: Math.round(memory.heapUsed / 1024 / 1024),
+    heapTotal: Math.round(memory.heapTotal / 1024 / 1024),
+    rss: Math.round(memory.rss / 1024 / 1024),
+  };
+};
+
+app.use((req, res, next) => {
+  const startMemory = getMemoryUsageMb();
+
+  console.log(
+    `[REQUEST START] ${req.method} ${req.originalUrl} | ` +
+      `heap=${startMemory.heapUsed}/${startMemory.heapTotal} MB | ` +
+      `rss=${startMemory.rss} MB`,
+  );
+
+  res.on("finish", () => {
+    const endMemory = getMemoryUsageMb();
+
+    console.log(
+      `[REQUEST END] ${req.method} ${req.originalUrl} | ` +
+        `status=${res.statusCode} | ` +
+        `heap=${endMemory.heapUsed}/${endMemory.heapTotal} MB | ` +
+        `rss=${endMemory.rss} MB`,
+    );
+  });
+
+  next();
+});
+
 /*
 |--------------------------------------------------------------------------
 | File upload
