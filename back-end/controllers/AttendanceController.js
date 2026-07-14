@@ -30,209 +30,709 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 // jika rolenya admin, admin super, supervisor, dan manager menampilkan semua presensi termasuk dirinya sendiri, kalo selain role tersebut maka menampilkan presensinya sendiri
+// export const getAttendances = async (req, res) => {
+//   try {
+//     const period = req.query.period || "Bulanan";
+//     // const selectedDateParam = req.query.month;
+//     const selectedMonthParam = req.query.month;
+//     const selectedDayParam = req.query.date;
+//     let dateFilter = {};
+//     // if (selectedDateParam) {
+//     //   let startDate, endDate;
+//     //   switch (period) {
+//     //     case "Harian":
+//     //       const targetDay = new Date(selectedDateParam);
+//     //       startDate = new Date(targetDay.setHours(0, 0, 0, 0));
+//     //       endDate = new Date(targetDay.setHours(23, 59, 59, 999));
+//     //       break;
+//     //     case "Mingguan":
+//     //       if (selectedDateParam.includes("-W")) {
+//     //         const [yearStr, weekStr] = selectedDateParam.split("-W");
+//     //         const year = parseInt(yearStr, 10);
+//     //         const week = parseInt(weekStr, 10);
+//     //         const simpleDate = new Date(year, 0, 1 + (week - 1) * 7);
+//     //         const dow = simpleDate.getDay();
+//     //         const ISOweekStart = simpleDate;
+//     //         if (dow <= 4) {
+//     //           ISOweekStart.setDate(
+//     //             simpleDate.getDate() - simpleDate.getDay() + 1,
+//     //           );
+//     //         } else {
+//     //           ISOweekStart.setDate(
+//     //             simpleDate.getDate() + 8 - simpleDate.getDay(),
+//     //           );
+//     //         }
+//     //         startDate = new Date(ISOweekStart);
+//     //         startDate.setHours(0, 0, 0, 0);
+//     //         endDate = new Date(startDate);
+//     //         endDate.setDate(startDate.getDate() + 6);
+//     //         endDate.setHours(23, 59, 59, 999);
+//     //       } else {
+//     //         const fallbackDate = new Date(selectedDateParam);
+//     //         const fbDay = fallbackDate.getDay();
+//     //         const fbDiffToMonday =
+//     //           fallbackDate.getDate() - fbDay + (fbDay === 0 ? -6 : 1);
+//     //         startDate = new Date(
+//     //           new Date(fallbackDate).setDate(fbDiffToMonday),
+//     //         );
+//     //         startDate.setHours(0, 0, 0, 0);
+//     //         endDate = new Date(
+//     //           new Date(startDate).setDate(startDate.getDate() + 6),
+//     //         );
+//     //         endDate.setHours(23, 59, 59, 999);
+//     //       }
+//     //       break;
+//     //     case "Bulanan":
+//     //     default:
+//     //       const targetMonth = new Date(selectedDateParam);
+//     //       startDate = new Date(
+//     //         targetMonth.getFullYear(),
+//     //         targetMonth.getMonth(),
+//     //         1,
+//     //         0,
+//     //         0,
+//     //         0,
+//     //       );
+//     //       endDate = new Date(
+//     //         targetMonth.getFullYear(),
+//     //         targetMonth.getMonth() + 1,
+//     //         0,
+//     //         23,
+//     //         59,
+//     //         59,
+//     //         999,
+//     //       );
+//     //       break;
+//     //   }
+//     //   dateFilter.date = { [Op.between]: [startDate, endDate] };
+//     // }
+//     if (selectedDayParam) {
+//       const startDate = dayjs
+//         .tz(selectedDayParam, "Asia/Jakarta")
+//         .startOf("day")
+//         .toDate();
+
+//       const endDate = dayjs
+//         .tz(selectedDayParam, "Asia/Jakarta")
+//         .endOf("day")
+//         .toDate();
+
+//       dateFilter.date = {
+//         [Op.between]: [startDate, endDate],
+//       };
+//     } else if (selectedMonthParam) {
+//       let startDate;
+//       let endDate;
+
+//       switch (period) {
+//         case "Harian": {
+//           const targetDay = new Date(selectedMonthParam);
+
+//           startDate = new Date(targetDay);
+//           startDate.setHours(0, 0, 0, 0);
+
+//           endDate = new Date(targetDay);
+//           endDate.setHours(23, 59, 59, 999);
+//           break;
+//         }
+
+//         case "Mingguan": {
+//           const targetDate = new Date(selectedMonthParam);
+//           const day = targetDate.getDay();
+
+//           const differenceToMonday =
+//             targetDate.getDate() - day + (day === 0 ? -6 : 1);
+
+//           startDate = new Date(targetDate);
+//           startDate.setDate(differenceToMonday);
+//           startDate.setHours(0, 0, 0, 0);
+
+//           endDate = new Date(startDate);
+//           endDate.setDate(startDate.getDate() + 6);
+//           endDate.setHours(23, 59, 59, 999);
+//           break;
+//         }
+
+//         case "Bulanan":
+//         default: {
+//           const targetMonth = new Date(selectedMonthParam);
+
+//           startDate = new Date(
+//             targetMonth.getFullYear(),
+//             targetMonth.getMonth(),
+//             1,
+//             0,
+//             0,
+//             0,
+//           );
+
+//           endDate = new Date(
+//             targetMonth.getFullYear(),
+//             targetMonth.getMonth() + 1,
+//             0,
+//             23,
+//             59,
+//             59,
+//             999,
+//           );
+//           break;
+//         }
+//       }
+
+//       dateFilter.date = {
+//         [Op.between]: [startDate, endDate],
+//       };
+//     } else {
+//       // Pengaman: tanpa parameter hanya mengambil bulan berjalan
+//       const now = dayjs().tz("Asia/Jakarta");
+
+//       dateFilter.date = {
+//         [Op.between]: [
+//           now.startOf("month").toDate(),
+//           now.endOf("month").toDate(),
+//         ],
+//       };
+//     }
+
+//     const isPrivileged = [
+//       "Admin",
+//       "Supervisor",
+//       "Manager",
+//       "Super Admin",
+//     ].includes(req.role);
+
+//     const whereClause = {
+//       ...dateFilter,
+//       ...(isPrivileged ? {} : { userId: req.userId }),
+//     };
+
+//     let response;
+//     if (["Admin", "Supervisor", "Manager", "Super Admin"].includes(req.role)) {
+//       response = await Attendances.findAll({
+//         // where: { ...dateFilter },
+//         attributes: [
+//           "id",
+//           "userId",
+//           "date",
+//           "checkInTime",
+//           "checkOutTime",
+//           "checkInLocation",
+//           "checkOutLocation",
+//           "attendanceStatus",
+//           "notes",
+//           "source",
+//           "leaveRequestId",
+//           "workShiftId",
+//           "checkInEvidencePhoto",
+//           "checkOutEvidencePhoto",
+//         ],
+//         include: [
+//           {
+//             model: Users,
+//             attributes: [
+//               "id",
+//               "titlePrefix",
+//               "fullName",
+//               "nip",
+//               "email",
+//               "profilePhoto",
+//               "employmentType",
+//             ],
+//             include: [
+//               {
+//                 model: Position,
+//                 attributes: ["id", "name"],
+//                 include: [
+//                   {
+//                     model: Division,
+//                     attributes: ["id", "name"],
+//                     include: [
+//                       {
+//                         model: Department,
+//                         attributes: ["id", "name"],
+//                       },
+//                     ],
+//                   },
+//                 ],
+//               },
+//               {
+//                 model: Profession,
+//                 attributes: ["id", "name"],
+//               },
+//               {
+//                 model: WorkShift,
+//                 attributes: ["id", "name", "startTime", "endTime"],
+//               },
+//               {
+//                 model: Role,
+//                 attributes: ["id", "name"],
+//               },
+//               {
+//                 model: ShiftAssignment,
+//                 required: false,
+//                 where: {
+//                   date: dateFilter.date,
+//                 },
+//                 attributes: ["id", "workShiftId", "date", "userId"],
+//                 include: [
+//                   {
+//                     model: WorkShift,
+//                     attributes: ["id", "name", "startTime", "endTime"],
+//                   },
+//                 ],
+//               },
+//             ],
+//           },
+//           {
+//             model: LeaveRequest,
+//             required: false,
+//             attributes: [
+//               "id",
+//               "userId",
+//               "leaveTypeId",
+//               "leaveSubTypeId",
+//               "startDate",
+//               "endDate",
+//               "note",
+//               "status",
+//             ],
+//           },
+//         ],
+//         order: [["date", "ASC"]],
+//       });
+//     } else {
+//       // hanya menampilkan data absensi user yang sedang login
+//       response = await Attendances.findAll({
+//         attributes: [
+//           "id",
+//           "date",
+//           "checkInTime",
+//           "checkOutTime",
+//           "checkInLocation",
+//           "checkOutLocation",
+//           "attendanceStatus",
+//           "notes",
+//           "source",
+//           "leaveRequestId",
+//         ],
+//         where: {
+//           userId: req.userId,
+//         },
+//       });
+//     }
+
+//     // const dataWithAvatar = response.map((att) => {
+//     //   const attend = att.toJSON();
+
+//     //   if (attend.user) {
+//     //     attend.user.avatarUrl = attend.user.profilePhoto
+//     //       ? `http://localhost:3000/uploads/profilePhotos/${attend.user.profilePhoto}`
+//     //       : null;
+//     //   }
+//     //   return attend;
+//     // });
+//     const backendUrl = (
+//       process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+//     ).replace(/\/$/, "");
+
+//     const dataWithAvatar = response.map((attendance) => {
+//       const data = attendance.get({ plain: true });
+
+//       if (data.user) {
+//         data.user.avatarUrl = data.user.profilePhoto
+//           ? `${backendUrl}/uploads/profilePhotos/${encodeURIComponent(
+//               data.user.profilePhoto,
+//             )}`
+//           : null;
+//       }
+
+//       return data;
+//     });
+
+//     res.status(200).json({
+//       message: "Berhasil menampilkan data absensi",
+//       data: dataWithAvatar,
+//     });
+//   } catch (e) {
+//     console.log(e);
+//     res
+//       .status(500)
+//       .json({ message: "Gagal mengambil data absensi", error: e.message });
+//   }
+// };
 export const getAttendances = async (req, res) => {
   try {
+    const TIME_ZONE = "Asia/Jakarta";
+
     const period = req.query.period || "Bulanan";
-    const selectedDateParam = req.query.month;
+    const selectedMonthParam = String(req.query.month || "").trim();
+    const selectedDayParam = String(req.query.date || "").trim();
+
     let dateFilter = {};
-    if (selectedDateParam) {
-      let startDate, endDate;
-      switch (period) {
-        case "Harian":
-          const targetDay = new Date(selectedDateParam);
-          startDate = new Date(targetDay.setHours(0, 0, 0, 0));
-          endDate = new Date(targetDay.setHours(23, 59, 59, 999));
-          break;
-        case "Mingguan":
-          if (selectedDateParam.includes("-W")) {
-            const [yearStr, weekStr] = selectedDateParam.split("-W");
-            const year = parseInt(yearStr, 10);
-            const week = parseInt(weekStr, 10);
-            const simpleDate = new Date(year, 0, 1 + (week - 1) * 7);
-            const dow = simpleDate.getDay();
-            const ISOweekStart = simpleDate;
-            if (dow <= 4) {
-              ISOweekStart.setDate(
-                simpleDate.getDate() - simpleDate.getDay() + 1,
-              );
-            } else {
-              ISOweekStart.setDate(
-                simpleDate.getDate() + 8 - simpleDate.getDay(),
-              );
-            }
-            startDate = new Date(ISOweekStart);
-            startDate.setHours(0, 0, 0, 0);
-            endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 6);
-            endDate.setHours(23, 59, 59, 999);
-          } else {
-            const fallbackDate = new Date(selectedDateParam);
-            const fbDay = fallbackDate.getDay();
-            const fbDiffToMonday =
-              fallbackDate.getDate() - fbDay + (fbDay === 0 ? -6 : 1);
-            startDate = new Date(
-              new Date(fallbackDate).setDate(fbDiffToMonday),
-            );
-            startDate.setHours(0, 0, 0, 0);
-            endDate = new Date(
-              new Date(startDate).setDate(startDate.getDate() + 6),
-            );
-            endDate.setHours(23, 59, 59, 999);
-          }
-          break;
-        case "Bulanan":
-        default:
-          const targetMonth = new Date(selectedDateParam);
-          startDate = new Date(
-            targetMonth.getFullYear(),
-            targetMonth.getMonth(),
-            1,
-            0,
-            0,
-            0,
-          );
-          endDate = new Date(
-            targetMonth.getFullYear(),
-            targetMonth.getMonth() + 1,
-            0,
-            23,
-            59,
-            59,
-            999,
-          );
-          break;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filter satu tanggal
+    |--------------------------------------------------------------------------
+    | Contoh:
+    | GET /attendances?date=2026-07-14
+    */
+    if (selectedDayParam) {
+      const targetDay = dayjs.tz(selectedDayParam, TIME_ZONE);
+
+      if (!targetDay.isValid()) {
+        return res.status(400).json({
+          message: "Format tanggal tidak valid!",
+        });
       }
-      dateFilter.date = { [Op.between]: [startDate, endDate] };
-    }
 
-    let response;
-    if (["Admin", "Supervisor", "Manager", "Super Admin"].includes(req.role)) {
-      response = await Attendances.findAll({
-        where: { ...dateFilter },
-        attributes: [
-          "id",
-          "date",
-          "checkInTime",
-          "checkOutTime",
-          "checkInLocation",
-          "checkOutLocation",
-          "attendanceStatus",
-          "notes",
-          "source",
-          "leaveRequestId",
-          "workShiftId",
-          //   "evidencePhoto",
-          "checkInEvidencePhoto",
-          "checkOutEvidencePhoto",
-        ],
-        include: [
-          {
-            model: Users,
-            attributes: [
-              "id",
-              "titlePrefix",
-              "fullName",
-              "nip",
-              "email",
-              "profilePhoto",
-              "employmentType",
-            ],
-            include: [
-              {
-                model: Position,
-                attributes: ["id", "name"],
-                include: [
-                  {
-                    model: Division,
-                    attributes: ["id", "name"],
-                    include: [
-                      {
-                        model: Department,
-                        attributes: ["id", "name"],
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                model: Profession,
-                attributes: ["id", "name"],
-              },
-              {
-                model: WorkShift,
-                attributes: ["id", "name", "startTime", "endTime"],
-              },
-              {
-                model: Role,
-              },
-              {
-                model: ShiftAssignment,
-                attributes: ["id", "workShiftId", "date", "userId"],
-                include: [
-                  {
-                    model: WorkShift,
-                    attributes: ["id", "name", "startTime", "endTime"],
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            model: LeaveRequest,
-            attributes: [
-              "id",
-              "userId",
-              "leaveTypeId",
-              "leaveSubTypeId",
-              "startDate",
-              "endDate",
-              "note",
-              "status",
-            ],
-          },
-        ],
-        order: [["date", "ASC"]],
-      });
+      const startDate = targetDay.startOf("day").toDate();
+      const endDate = targetDay.endOf("day").toDate();
+
+      dateFilter.date = {
+        [Op.between]: [startDate, endDate],
+      };
+    } else if (selectedMonthParam) {
+      /*
+    |--------------------------------------------------------------------------
+    | Filter berdasarkan period dan month
+    |--------------------------------------------------------------------------
+    */
+      let startDate;
+      let endDate;
+
+      switch (period) {
+        /*
+        |--------------------------------------------------------------------------
+        | Harian
+        |--------------------------------------------------------------------------
+        */
+        case "Harian": {
+          const targetDay = dayjs.tz(selectedMonthParam, TIME_ZONE);
+
+          if (!targetDay.isValid()) {
+            return res.status(400).json({
+              message: "Format tanggal harian tidak valid!",
+            });
+          }
+
+          startDate = targetDay.startOf("day").toDate();
+          endDate = targetDay.endOf("day").toDate();
+
+          break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Mingguan
+        |--------------------------------------------------------------------------
+        | Format yang diterima:
+        | 2026 W-1
+        | 2026 w-1
+        | 2026-W1
+        | 2026-W01
+        |
+        | Selain itu, tanggal biasa seperti 2026-07-14 juga masih diterima.
+        */
+        case "Mingguan": {
+          const weekMatch = selectedMonthParam.match(
+            /^(\d{4})\s*[- ]?W-?(\d{1,2})$/i,
+          );
+
+          if (weekMatch) {
+            const year = Number(weekMatch[1]);
+            const week = Number(weekMatch[2]);
+
+            if (week < 1 || week > 53) {
+              return res.status(400).json({
+                message: "Nomor minggu harus berada antara 1 sampai 53!",
+              });
+            }
+
+            /*
+             * Berdasarkan ISO week:
+             * Minggu pertama adalah minggu yang memiliki tanggal 4 Januari.
+             */
+            const januaryFourth = dayjs
+              .tz(`${year}-01-04`, TIME_ZONE)
+              .startOf("day");
+
+            /*
+             * dayjs:
+             * Minggu = 0
+             * Senin = 1
+             *
+             * ISO:
+             * Minggu = 7
+             * Senin = 1
+             */
+            const januaryFourthIsoDay = januaryFourth.day() || 7;
+
+            const firstMonday = januaryFourth.subtract(
+              januaryFourthIsoDay - 1,
+              "day",
+            );
+
+            const selectedWeekMonday = firstMonday
+              .add((week - 1) * 7, "day")
+              .startOf("day");
+
+            startDate = selectedWeekMonday.toDate();
+            endDate = selectedWeekMonday.add(6, "day").endOf("day").toDate();
+          } else {
+            /*
+             * Fallback apabila frontend mengirim tanggal biasa,
+             * misalnya 2026-07-14.
+             */
+            const targetDate = dayjs.tz(selectedMonthParam, TIME_ZONE);
+
+            if (!targetDate.isValid()) {
+              return res.status(400).json({
+                message: "Format minggu tidak valid. Gunakan contoh 2026 W-1!",
+              });
+            }
+
+            const isoDay = targetDate.day() || 7;
+
+            const monday = targetDate
+              .subtract(isoDay - 1, "day")
+              .startOf("day");
+
+            startDate = monday.toDate();
+            endDate = monday.add(6, "day").endOf("day").toDate();
+          }
+
+          break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Bulanan
+        |--------------------------------------------------------------------------
+        */
+        case "Bulanan":
+        default: {
+          const normalizedMonth = /^\d{4}-\d{2}$/.test(selectedMonthParam)
+            ? `${selectedMonthParam}-01`
+            : selectedMonthParam;
+
+          const targetMonth = dayjs.tz(normalizedMonth, TIME_ZONE);
+
+          if (!targetMonth.isValid()) {
+            return res.status(400).json({
+              message: "Format bulan tidak valid!",
+            });
+          }
+
+          startDate = targetMonth.startOf("month").toDate();
+          endDate = targetMonth.endOf("month").toDate();
+
+          break;
+        }
+      }
+
+      dateFilter.date = {
+        [Op.between]: [startDate, endDate],
+      };
     } else {
-      // hanya menampilkan data absensi user yang sedang login
-      response = await Attendances.findAll({
-        attributes: [
-          "id",
-          "date",
-          "checkInTime",
-          "checkOutTime",
-          "checkInLocation",
-          "checkOutLocation",
-          "attendanceStatus",
-          "notes",
-          "source",
-          "leaveRequestId",
+      /*
+    |--------------------------------------------------------------------------
+    | Pengaman request tanpa parameter
+    |--------------------------------------------------------------------------
+    | GET /attendances
+    | hanya mengambil bulan berjalan, bukan seluruh tabel.
+    */
+      const currentMonth = dayjs().tz(TIME_ZONE);
+
+      dateFilter.date = {
+        [Op.between]: [
+          currentMonth.startOf("month").toDate(),
+          currentMonth.endOf("month").toDate(),
         ],
-        where: {
-          userId: req.userId,
-        },
-      });
+      };
     }
 
-    const dataWithAvatar = response.map((att) => {
-      const attend = att.toJSON();
+    /*
+    |--------------------------------------------------------------------------
+    | Pembatasan berdasarkan role
+    |--------------------------------------------------------------------------
+    */
+    const isPrivileged = [
+      "Admin",
+      "Supervisor",
+      "Manager",
+      "Super Admin",
+    ].includes(req.role);
 
-      if (attend.user) {
-        attend.user.avatarUrl = attend.user.profilePhoto
-          ? `http://localhost:3000/uploads/profilePhotos/${attend.user.profilePhoto}`
+    const whereClause = {
+      ...dateFilter,
+      ...(isPrivileged ? {} : { userId: req.userId }),
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query presensi
+    |--------------------------------------------------------------------------
+    */
+    const response = await Attendances.findAll({
+      where: whereClause,
+
+      attributes: [
+        "id",
+        "userId",
+        "date",
+        "checkInTime",
+        "checkOutTime",
+        "checkInLocation",
+        "checkOutLocation",
+        "attendanceStatus",
+        "notes",
+        "source",
+        "leaveRequestId",
+        "workShiftId",
+        "checkInEvidencePhoto",
+        "checkOutEvidencePhoto",
+      ],
+
+      include: [
+        {
+          model: Users,
+
+          attributes: [
+            "id",
+            "titlePrefix",
+            "fullName",
+            "titleSuffix",
+            "nip",
+            "email",
+            "profilePhoto",
+            "employmentType",
+          ],
+
+          include: [
+            {
+              model: Position,
+              attributes: ["id", "name"],
+
+              include: [
+                {
+                  model: Division,
+                  attributes: ["id", "name"],
+
+                  include: [
+                    {
+                      model: Department,
+                      attributes: ["id", "name"],
+                    },
+                  ],
+                },
+              ],
+            },
+
+            {
+              model: Profession,
+              attributes: ["id", "name"],
+            },
+
+            /*
+             * Default work shift milik user.
+             * Digunakan terutama untuk karyawan Non-Shift.
+             */
+            {
+              model: WorkShift,
+              attributes: ["id", "name", "startTime", "endTime"],
+            },
+
+            {
+              model: Role,
+              attributes: ["id", "name"],
+            },
+
+            /*
+             * Penting:
+             * separate: true mencegah seluruh ShiftAssignment
+             * di-join ke setiap baris Attendance.
+             *
+             * Tanpa separate: true, hasil SQL dapat berlipat
+             * dan menyebabkan heap out of memory.
+             */
+            {
+              model: ShiftAssignment,
+              required: false,
+              separate: true,
+
+              where: {
+                date: dateFilter.date,
+              },
+
+              attributes: ["id", "workShiftId", "date", "userId"],
+
+              include: [
+                {
+                  model: WorkShift,
+                  attributes: ["id", "name", "startTime", "endTime"],
+                },
+              ],
+
+              order: [["date", "ASC"]],
+            },
+          ],
+        },
+
+        {
+          model: LeaveRequest,
+          required: false,
+
+          attributes: [
+            "id",
+            "userId",
+            "leaveTypeId",
+            "leaveSubTypeId",
+            "startDate",
+            "endDate",
+            "note",
+            "status",
+          ],
+        },
+      ],
+
+      order: [["date", "ASC"]],
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | URL foto profil
+    |--------------------------------------------------------------------------
+    */
+    const backendUrl = (
+      process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+    ).replace(/\/$/, "");
+
+    const dataWithAvatar = response.map((attendance) => {
+      const data = attendance.get({ plain: true });
+
+      if (data.user) {
+        data.user.avatarUrl = data.user.profilePhoto
+          ? `${backendUrl}/uploads/profilePhotos/${encodeURIComponent(
+              data.user.profilePhoto,
+            )}`
           : null;
       }
-      return attend;
+
+      return data;
     });
-    res.status(200).json({
+
+    return res.status(200).json({
       message: "Berhasil menampilkan data absensi",
       data: dataWithAvatar,
     });
   } catch (e) {
-    console.log(e);
-    res
-      .status(500)
-      .json({ message: "Gagal mengambil data absensi", error: e.message });
+    console.error("Get attendances error:", e);
+
+    return res.status(500).json({
+      message: "Gagal mengambil data absensi",
+      error: e.message,
+    });
   }
 };
 
@@ -1530,6 +2030,22 @@ export const deleteAttendance = async (req, res) => {
 };
 
 export const createAttendanceManual = async (req, res) => {
+  const parseManualDateTime = (baseDate, value) => {
+    if (!value) return null;
+
+    const normalizedValue = String(value).trim();
+
+    // datetime-local sudah mengandung tanggal: 2026-07-14T08:00
+    // input time biasa hanya mengandung jam: 08:00
+    const dateTimeValue = normalizedValue.includes("T")
+      ? normalizedValue
+      : `${baseDate}T${normalizedValue}`;
+
+    const parsedValue = dayjs.tz(dateTimeValue, "Asia/Jakarta");
+
+    return parsedValue.isValid() ? parsedValue.toDate() : null;
+  };
+
   try {
     const {
       userId,
@@ -1545,7 +2061,30 @@ export const createAttendanceManual = async (req, res) => {
     if (!userId || !date || !checkInTime || !attendanceStatus) {
       return res
         .status(400)
-        .json({ message: "Data wajib diisi belum lengkap!" });
+        .json({ message: "Kolom wajib diisi belum lengkap!" });
+    }
+
+    const parsedCheckInTime = parseManualDateTime(date, checkInTime);
+    const parsedCheckOutTime = checkOutTime
+      ? parseManualDateTime(date, checkOutTime)
+      : null;
+
+    if (!parsedCheckInTime) {
+      return res.status(400).json({
+        message: "Format jam masuk tidak valid!",
+      });
+    }
+
+    if (checkOutTime && !parsedCheckOutTime) {
+      return res.status(400).json({
+        message: "Format jam keluar tidak valid!",
+      });
+    }
+
+    if (parsedCheckOutTime && parsedCheckOutTime <= parsedCheckInTime) {
+      return res.status(400).json({
+        message: "Jam keluar harus lebih besar daripada jam masuk!",
+      });
     }
 
     const user = await Users.findOne({
@@ -1577,29 +2116,72 @@ export const createAttendanceManual = async (req, res) => {
         finalWorkShiftId = assignments[0].workShiftId;
       } else {
         // LOGIKA SHIFT GANDA: Cari shift yang paling sesuai dengan jam masuk yang diinput admin
-        const inputTime = dayjs(`${date} ${checkInTime}`);
+        // const inputTime = dayjs(`${date} ${checkInTime}`);
+        const inputTime = dayjs(parsedCheckInTime);
         let bestMatch = null;
 
-        for (const sa of assignments) {
-          const [sh, sm] = sa.workShift.startTime.split(":").map(Number);
-          const [eh, em] = sa.workShift.endTime.split(":").map(Number);
+        // for (const sa of assignments) {
+        //   const [sh, sm] = sa.workShift.startTime.split(":").map(Number);
+        //   const [eh, em] = sa.workShift.endTime.split(":").map(Number);
 
-          const shiftStart = dayjs(
-            `${date} ${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`,
-          );
-          let shiftEnd = dayjs(
-            `${date} ${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`,
-          );
+        //   const shiftStart = dayjs(
+        //     `${date} ${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")}`,
+        //   );
+        //   let shiftEnd = dayjs(
+        //     `${date} ${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`,
+        //   );
 
-          if (shiftEnd.isBefore(shiftStart)) shiftEnd = shiftEnd.add(1, "day");
+        //   if (shiftEnd.isBefore(shiftStart)) shiftEnd = shiftEnd.add(1, "day");
 
-          // Kita beri toleransi: jam masuk manual berada di rentang
-          // (Shift Start - 2 jam) sampai (Shift End)
-          if (
-            inputTime.isAfter(shiftStart.subtract(2, "hour")) &&
-            inputTime.isBefore(shiftEnd)
-          ) {
-            bestMatch = sa;
+        //   // Kita beri toleransi: jam masuk manual berada di rentang
+        //   // (Shift Start - 2 jam) sampai (Shift End)
+        //   if (
+        //     inputTime.isAfter(shiftStart.subtract(2, "hour")) &&
+        //     inputTime.isBefore(shiftEnd)
+        //   ) {
+        //     bestMatch = sa;
+        //     break;
+        //   }
+        // }
+        for (const assignment of assignments) {
+          if (!assignment.workShift) continue;
+
+          const [startHour, startMinute] = assignment.workShift.startTime
+            .split(":")
+            .map(Number);
+
+          const [endHour, endMinute] = assignment.workShift.endTime
+            .split(":")
+            .map(Number);
+
+          const shiftStart = dayjs
+            .tz(date, "Asia/Jakarta")
+            .hour(startHour)
+            .minute(startMinute)
+            .second(0)
+            .millisecond(0);
+
+          let shiftEnd = dayjs
+            .tz(date, "Asia/Jakarta")
+            .hour(endHour)
+            .minute(endMinute)
+            .second(0)
+            .millisecond(0);
+
+          // Shift malam melewati pergantian hari
+          if (shiftEnd.isBefore(shiftStart) || shiftEnd.isSame(shiftStart)) {
+            shiftEnd = shiftEnd.add(1, "day");
+          }
+
+          const earliestCheckIn = shiftStart.subtract(2, "hour");
+
+          const isWithinShift =
+            (inputTime.isAfter(earliestCheckIn) ||
+              inputTime.isSame(earliestCheckIn)) &&
+            (inputTime.isBefore(shiftEnd) || inputTime.isSame(shiftEnd));
+
+          if (isWithinShift) {
+            bestMatch = assignment;
             break;
           }
         }
@@ -1636,10 +2218,10 @@ export const createAttendanceManual = async (req, res) => {
     const manualAttend = await Attendances.create({
       userId,
       date,
-      checkInTime: dayjs(`${date} ${checkInTime}`).toDate(),
-      checkOutTime: checkOutTime
-        ? dayjs(`${date} ${checkOutTime}`).toDate()
-        : null,
+      //   checkInTime: dayjs(`${date} ${checkInTime}`).toDate(),
+      //   checkOutTime: checkOutTime ? dayjs(`${date} ${checkOutTime}`).toDate() : null,
+      checkInTime: parsedCheckInTime,
+      checkOutTime: parsedCheckOutTime,
       checkInLocation: req.body.checkInLocation || "",
       checkOutLocation: req.body.checkOutLocation || (checkOutTime ? "" : null),
       attendanceStatus,

@@ -81,9 +81,13 @@ function AttendanceHistory() {
 
   useEffect(() => {
     // getAttendances();
-    fetchAttendanceHistory();
+    // fetchAttendanceHistory();
     fetchOrganizations();
   }, []);
+
+  useEffect(() => {
+    fetchAttendanceHistory();
+  }, [currentPage, filter.startDate, filter.endDate, statusFilter, searchText]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -95,117 +99,117 @@ function AttendanceHistory() {
     filter.endDate,
   ]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // const res = await axiosInstance.get("/attendances/history");
-        // const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        // setAttendance(data);
+  //   useEffect(() => {
+  //     const fetchData = async () => {
+  //       setLoading(true);
+  //       try {
+  //         // const res = await axiosInstance.get("/attendances/history");
+  //         // const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+  //         // setAttendance(data);
 
-        const response = await axiosInstance.get("/attendances/history", {
-          params: {
-            page: currentPage,
-            limit: 10,
-            startDate: filter.startDate,
-            endDate: filter.endDate,
-            search_query: searchText,
-            status: statusFilter,
-          },
-        });
-        setAttendance(response.data.data || []);
-        setStatus({
-          total: { count: response.data.summary?.total || 0 },
-          hadir: { count: response.data.summary?.hadir || 0 },
-          terlambat: { count: response.data.summary?.terlambat || 0 },
-          izin: { count: response.data.summary?.izin || 0 },
-          tidakHadir: {
-            count: response.data.summary?.tidakHadir || 0,
-          },
-        });
-        setPagination(response.data.pagination);
+  //         const response = await axiosInstance.get("/attendances/history", {
+  //           params: {
+  //             page: currentPage,
+  //             limit: 10,
+  //             startDate: filter.startDate,
+  //             endDate: filter.endDate,
+  //             search_query: searchText,
+  //             status: statusFilter,
+  //           },
+  //         });
+  //         setAttendance(response.data.data || []);
+  //         setStatus({
+  //           total: { count: response.data.summary?.total || 0 },
+  //           hadir: { count: response.data.summary?.hadir || 0 },
+  //           terlambat: { count: response.data.summary?.terlambat || 0 },
+  //           izin: { count: response.data.summary?.izin || 0 },
+  //           tidakHadir: {
+  //             count: response.data.summary?.tidakHadir || 0,
+  //           },
+  //         });
+  //         setPagination(response.data.pagination);
 
-        const start = new Date(filter.startDate);
-        const end = new Date(filter.endDate);
+  //         const start = new Date(filter.startDate);
+  //         const end = new Date(filter.endDate);
 
-        const diffDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  //         const diffDays = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-        const prevStart = new Date(start);
-        prevStart.setDate(prevStart.getDate() - diffDays);
+  //         const prevStart = new Date(start);
+  //         prevStart.setDate(prevStart.getDate() - diffDays);
 
-        const prevEnd = new Date(end);
-        prevEnd.setDate(prevEnd.getDate() - diffDays);
+  //         const prevEnd = new Date(end);
+  //         prevEnd.setDate(prevEnd.getDate() - diffDays);
 
-        const filterRange = (list, startDate, endDate) => {
-          return list.filter((d) => {
-            const dt = new Date(d.date);
-            return dt >= startDate && dt <= endDate;
-          });
-        };
+  //         const filterRange = (list, startDate, endDate) => {
+  //           return list.filter((d) => {
+  //             const dt = new Date(d.date);
+  //             return dt >= startDate && dt <= endDate;
+  //           });
+  //         };
 
-        // const currentData = filterRange(data, start, end);
-        // const prevData = filterRange(data, prevStart, prevEnd);
+  //         // const currentData = filterRange(data, start, end);
+  //         // const prevData = filterRange(data, prevStart, prevEnd);
 
-        const currentData = filterRange(start, end);
-        const prevData = filterRange(prevStart, prevEnd);
+  //         const currentData = filterRange(start, end);
+  //         const prevData = filterRange(prevStart, prevEnd);
 
-        const calcGrowth = (curr, prev) => {
-          if (prev === 0) return curr > 0 ? 100 : 0;
-          return (((curr - prev) / prev) * 100).toFixed(1);
-        };
+  //         const calcGrowth = (curr, prev) => {
+  //           if (prev === 0) return curr > 0 ? 100 : 0;
+  //           return (((curr - prev) / prev) * 100).toFixed(1);
+  //         };
 
-        const countStatus = (list, statusList) =>
-          list.filter((d) => statusList.includes(d.attendanceStatus)).length;
+  //         const countStatus = (list, statusList) =>
+  //           list.filter((d) => statusList.includes(d.attendanceStatus)).length;
 
-        const newStatus = {
-          total: {
-            count: currentData.length,
-            growth: calcGrowth(currentData.length, prevData.length),
-          },
+  //         const newStatus = {
+  //           total: {
+  //             count: currentData.length,
+  //             growth: calcGrowth(currentData.length, prevData.length),
+  //           },
 
-          hadir: {
-            count: countStatus(currentData, ["Hadir", "Dinas Luar"]),
-            growth: calcGrowth(
-              countStatus(currentData, ["Hadir", "Dinas Luar"]),
-              countStatus(prevData, ["Hadir", "Dinas Luar"]),
-            ),
-          },
+  //           hadir: {
+  //             count: countStatus(currentData, ["Hadir", "Dinas Luar"]),
+  //             growth: calcGrowth(
+  //               countStatus(currentData, ["Hadir", "Dinas Luar"]),
+  //               countStatus(prevData, ["Hadir", "Dinas Luar"]),
+  //             ),
+  //           },
 
-          terlambat: {
-            count: countStatus(currentData, ["Terlambat"]),
-            growth: calcGrowth(
-              countStatus(currentData, ["Terlambat"]),
-              countStatus(prevData, ["Terlambat"]),
-            ),
-          },
+  //           terlambat: {
+  //             count: countStatus(currentData, ["Terlambat"]),
+  //             growth: calcGrowth(
+  //               countStatus(currentData, ["Terlambat"]),
+  //               countStatus(prevData, ["Terlambat"]),
+  //             ),
+  //           },
 
-          izin: {
-            count: countStatus(currentData, ["Izin"]),
-            growth: calcGrowth(
-              countStatus(currentData, ["Izin"]),
-              countStatus(prevData, ["Izin"]),
-            ),
-          },
+  //           izin: {
+  //             count: countStatus(currentData, ["Izin"]),
+  //             growth: calcGrowth(
+  //               countStatus(currentData, ["Izin"]),
+  //               countStatus(prevData, ["Izin"]),
+  //             ),
+  //           },
 
-          tidakHadir: {
-            count: countStatus(currentData, ["Tidak Hadir"]),
-            growth: calcGrowth(
-              countStatus(currentData, ["Tidak Hadir"]),
-              countStatus(prevData, ["Tidak Hadir"]),
-            ),
-          },
-        };
+  //           tidakHadir: {
+  //             count: countStatus(currentData, ["Tidak Hadir"]),
+  //             growth: calcGrowth(
+  //               countStatus(currentData, ["Tidak Hadir"]),
+  //               countStatus(prevData, ["Tidak Hadir"]),
+  //             ),
+  //           },
+  //         };
 
-        setStatus(newStatus);
-      } catch (err) {
-        console.error("Gagal hitung statistik:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //         setStatus(newStatus);
+  //       } catch (err) {
+  //         console.error("Gagal hitung statistik:", err);
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     };
 
-    fetchData();
-  }, [filter.startDate, filter.endDate]);
+  //     fetchData();
+  //   }, [filter.startDate, filter.endDate]);
 
   //   const getAttendances = async () => {
   //     try {
@@ -333,7 +337,9 @@ function AttendanceHistory() {
     );
   };
 
-  const filteredAttendance = attendance
+  const attendanceList = Array.isArray(attendance) ? attendance : [];
+
+  const filteredAttendance = attendanceList
     .filter((att) => {
       const fullName = [
         att.user?.titlePrefix,
@@ -1170,8 +1176,10 @@ function AttendanceHistory() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={() => {
-          setAttendance();
+          //   setAttendance();
           setShowAddModal(false);
+          setCurrentPage(1);
+          fetchAttendanceHistory();
         }}
       />
       {selectedAttendance && (
@@ -1228,15 +1236,45 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
+  //   const handleSubmit = async (e) => {
+  //     e.preventDefault();
+  //     if (!formData.userId) return alert("Pilih karyawan terlebih dahulu!");
+
+  //     try {
+  //       await axiosInstance.post("/attendances/admin", formData);
+  //       alert("Presensi manual berhasil ditambahkan!");
+  //       if (onSuccess) onSuccess();
+  //       onClose();
+  //       setFormData({
+  //         userId: "",
+  //         date: new Date().toISOString().split("T")[0],
+  //         checkInTime: formatToDatetimeLocalComplete(new Date()),
+  //         checkOutTime: "",
+  //         checkInLocation: "",
+  //         checkOutLocation: "",
+  //         attendance: "INSIDE",
+  //         attendanceStatus: "Hadir",
+  //         source: "Manual",
+  //         notes: "",
+  //       });
+  //     } catch (e) {
+  //       console.error("Gagal tambah presensi:", e);
+  //       alert(e.response?.data?.message || "Terjadi kesalahan sistem");
+  //     }
+  //   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.userId) return alert("Pilih karyawan terlebih dahulu!");
+
+    if (!formData.userId) {
+      alert("Pilih karyawan terlebih dahulu!");
+      return;
+    }
 
     try {
       await axiosInstance.post("/attendances/admin", formData);
+
       alert("Presensi manual berhasil ditambahkan!");
-      if (onSuccess) onSuccess();
-      onClose();
+
       setFormData({
         userId: "",
         date: new Date().toISOString().split("T")[0],
@@ -1245,13 +1283,19 @@ const AddAttendance = ({ isOpen, onClose, onSuccess }) => {
         checkInLocation: "",
         checkOutLocation: "",
         attendance: "INSIDE",
-        attendanceStatus: "Hadir",
         source: "Manual",
+        attendanceStatus: "Hadir",
         notes: "",
       });
-    } catch (e) {
-      console.error("Gagal tambah presensi:", e);
-      alert(e.response?.data?.message || "Terjadi kesalahan sistem");
+
+      onSuccess?.();
+    } catch (error) {
+      console.error(
+        "Gagal tambah presensi:",
+        error.response?.data || error.message,
+      );
+
+      alert(error.response?.data?.message || "Terjadi kesalahan sistem");
     }
   };
 

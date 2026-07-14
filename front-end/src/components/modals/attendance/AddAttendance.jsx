@@ -1,3 +1,4 @@
+// GA DIPAKE
 // import axios from "axios";
 import { useState } from "react";
 // import '../../../style/AddAttendance.css';
@@ -28,10 +29,6 @@ const AddAttendance = () => {
   const searchUser = async (query) => {
     if (!query) return setSearchResults([]);
     try {
-      //   const res = await axios.get(
-      //     `http://localhost:3000/users/search?q=${query}`,
-      //     { headers: { Authorization: `Bearer ${token}` } },
-      //   );
       const res = await axiosInstance.get(`/users/search?q=${query}`);
       setSearchResults(res.data);
     } catch (err) {
@@ -113,7 +110,6 @@ const AddAttendance = () => {
 
     try {
       await axiosInstance.post(
-        // "http://localhost:3000/attendances",
         "/attendances",
         {
           userId: attendance.userId,
