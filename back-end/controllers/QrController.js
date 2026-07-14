@@ -20,7 +20,7 @@ export const getDailyQRCode = async (req, res) => {
 export const getDynamicQRCode = async (req, res) => {
   try {
     const token = await generateDynamicQR();
-    const qrImage = await QRCode.toDataURL(token);
+    // const qrImage = await QRCode.toDataURL(token);
 
     res.status(200).json({
       token,
@@ -28,6 +28,9 @@ export const getDynamicQRCode = async (req, res) => {
       expiresIn: 30, // biar frontend tau refresh
     });
   } catch (e) {
-    res.status(500).json({ message: "Gagal membuat QR", error: e.message });
+    res.status(500).json({
+      message: "Gagal membuat QR",
+      error: e.message || error.original?.message,
+    });
   }
 };

@@ -24,7 +24,8 @@ const QrCodeToken = db.define(
   {
     freezeTableName: true,
     timestamps: true, // createdAt dan updatedAt otomatis
-  }
+    tableName: "qrcodetokens",
+  },
 );
 
 export default QrCodeToken;
