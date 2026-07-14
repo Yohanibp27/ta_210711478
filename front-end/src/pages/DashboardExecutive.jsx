@@ -3480,7 +3480,7 @@ const WorkloadAnalysis = () => {
                   </span>
                   <span className="time-val">
                     {formatDateIndo(hoveredTimeline.tanggal_presensi) ||
-                      "yyyy-mm-dd"}
+                      "--/--/----"}
                   </span>
                 </div>
                 <div className="summary-row">
