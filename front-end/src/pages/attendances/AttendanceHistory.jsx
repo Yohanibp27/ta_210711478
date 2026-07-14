@@ -143,8 +143,11 @@ function AttendanceHistory() {
           });
         };
 
-        const currentData = filterRange(data, start, end);
-        const prevData = filterRange(data, prevStart, prevEnd);
+        // const currentData = filterRange(data, start, end);
+        // const prevData = filterRange(data, prevStart, prevEnd);
+
+        const currentData = filterRange(start, end);
+        const prevData = filterRange(prevStart, prevEnd);
 
         const calcGrowth = (curr, prev) => {
           if (prev === 0) return curr > 0 ? 100 : 0;
@@ -798,6 +801,7 @@ function AttendanceHistory() {
                   <option value="Cuti">Cuti</option>
                   <option value="Dinas Luar">Dinas Luar</option>
                   <option value="Tidak Hadir">Tidak Hadir</option>
+                  <option value="Tidak Valid">Tidak Valid</option>
                 </select>
                 {/* <select
               className="select-input"
