@@ -2306,6 +2306,12 @@
 
 /* ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /* LOGIN & FORGOT PASSWORD */
+label {
+  font-weight: 500;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  display: block;
+}
 .login-container {
   min-height: 100vh;
   display: flex;

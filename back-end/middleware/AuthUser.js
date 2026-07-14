@@ -47,18 +47,27 @@ export const verifyTokenForReset = (req, res, next) => {
   if (!token) {
     return res
       .status(401)
-      .json({ message: "Token reset password tidak ditemukan" });
+      .json({ message: "Token reset password tidak ditemukan!" });
+  }
+
+  if (!process.env.JWT_RESET_SECRET) {
+    console.error("JWT_RESET_SECRET belum tersedia!");
+
+    return res.status(500).json({
+      message: "Konfigurasi reset password belum tersedia!",
+    });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_RESET_SECRET);
     req.userId = decoded.id; // simpan id user ke req
+    req.resetEmail = decoded.email;
     next();
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error("Token reset password tidak valid!", e.message);
     return res
       .status(401)
-      .json({ message: "Token reset password tidak valid atau expired" });
+      .json({ message: "Token reset password tidak valid atau kedaluwarsa!" });
   }
 };
 

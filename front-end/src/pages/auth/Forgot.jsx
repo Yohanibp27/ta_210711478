@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import axios from "axios";
 import Logo from "../../assets/images/bhayangkara.png";
 import axiosInstance from "../../api/axios";
 
@@ -18,20 +17,30 @@ function ForgotPass() {
     setError("");
 
     try {
-      const res = await axiosInstance.post(
-        // "http://localhost:3000/forgot-password",
-        "/forgot-password",
-        { email },
-        {
-          headers: { "Content-Type": "application/json" },
-        },
+      const res = await axiosInstance.post("/forgot-password", {
+        email: email.trim().toLowerCase(),
+      });
+      //   alert("Link reset password sudah dikirim ke email Anda!");
+      //   setMessage(res.data.message);
+      setMessage(
+        res.data?.message || "Link reset password sudah dikirim ke email Anda.",
       );
-      alert("Link reset password sudah dikirim ke email Anda!");
-      setMessage(res.data.message);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      //   console.error(e);
+      //   setError(
+      //     e.response?.data?.message || "Terjadi kesalahan saat mengirim email.",
+      //   );
+      const backendError = error.response?.data;
+      console.error(
+        "Gagal mengirim email reset password:",
+        backendError || error.message,
+      );
+
       setError(
-        e.response?.data?.message || "Terjadi kesalahan saat mengirim email.",
+        backendError?.error ||
+          backendError?.message ||
+          error.message ||
+          "Terjadi kesalahan saat mengirim email!",
       );
     } finally {
       setLoading(false);
@@ -76,7 +85,7 @@ function ForgotPass() {
             />
           </div>
           <small className="forgot-text">Contoh: admin@gmail.com</small>
-          <button type="submit" className="button-login">
+          <button type="submit" className="button-login" disabled={loading}>
             {loading ? "Mengirim..." : "Kirim Link"}
           </button>
           <button

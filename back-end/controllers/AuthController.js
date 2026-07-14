@@ -373,10 +373,17 @@ export const LogOut = async (req, res) => {
 
 export const ForgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    // const { email } = req.body;
+    const email = String(req.body.email || "")
+      .trim()
+      .toLowerCase();
 
     if (!email) {
       return res.status(400).json({ message: "Email wajib diisi!" });
+    }
+
+    if (!JWT_RESET_SECRET) {
+      throw new Error("JWT_RESET_SECRET belum tersedia pada server.");
     }
 
     const user = await User.findOne({ where: { email } });
@@ -391,24 +398,33 @@ export const ForgotPassword = async (req, res) => {
       { expiresIn: "15m" }, // 15 menit
     );
 
+    const frontendUrl = FRONTEND_URL.replace(/\/$/, "");
+
     // Link reset password
-    const resetLink = `${FRONTEND_URL}/reset-password/${resetToken}`;
+    // const resetLink = `${FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetLink =
+      `${frontendUrl}/reset-password/` + encodeURIComponent(resetToken);
 
     // Kirim email
     await sendEmail(
       user.email,
       "Notifikasi Reset Password RSBI",
-      `Klik link berikut untuk reset password Anda:\n\n${resetLink}\n\nLink berlaku 15 menit.`,
+      `Klik link berikut untuk reset password Anda:\n\n${resetLink}\n\nLink berlaku 15 menit`,
     );
 
     res.status(200).json({
       message: "Link reset password telah dikirim ke email Anda",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Gagal memproses permintaan reset password!", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+    });
     res.status(500).json({
-      message: "Gagal memproses permintaan reset password",
-      error: error.message,
+      message: "Gagal mengirim link reset password!",
     });
   }
 };
@@ -422,8 +438,9 @@ export const ResetPassword = async (req, res) => {
     });
   }
 
-  // const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  //   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
+  //   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
   if (!passwordRegex.test(password)) {
     return res.status(400).json({
@@ -443,6 +460,9 @@ export const ResetPassword = async (req, res) => {
 
     // update password user
     user.password = hashedPassword;
+
+    // token sesi lama tidak dapat digunakan lagi
+    user.refresh_token = null;
     await user.save();
 
     res.json({ message: "Password berhasil direset!" });

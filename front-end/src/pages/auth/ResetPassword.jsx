@@ -27,18 +27,14 @@ function ResetPassword() {
     setLoading(true);
 
     try {
-      const res = await axiosInstance.post(
-        // `http://localhost:3000/reset-password/${token}`,
-        `/reset-password/${token}`,
-        { password },
-        // { headers: { "Content-Type": "application/json" } },
-      );
+      const res = await axiosInstance.post(`/reset-password/${token}`, {
+        password,
+      });
       console.log("Token:", token);
       setSuccess(res.data.message);
       setTimeout(() => {
         navigate("/");
       }, 2000);
-      // setTimeout(()=>{}, 2000); // atau tanpa kembali ke login supaya ga banyak tab
     } catch (err) {
       console.error(err);
       setError(
