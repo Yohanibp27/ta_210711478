@@ -16,8 +16,8 @@
 
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
-// const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
+// const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
 
 const axiosInstance = axios.create({
   //   baseURL: "http://localhost:3000",
@@ -25,7 +25,7 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// let refreshPromise = null;
+let refreshPromise = null;
 
 // Interceptor untuk menyisipkan token ke setiap request
 axiosInstance.interceptors.request.use(
@@ -41,134 +41,134 @@ axiosInstance.interceptors.request.use(
 );
 
 // Interceptor untuk menangani Token Expired otomatis
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Jika error 401 dan belum pernah dicoba refresh
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        // Panggil endpoint refresh token
-        // const res = await axios.get("http://localhost:3000/token", {
-        const res = await axios.get(`${API_URL}/token`, {
-          withCredentials: true,
-        });
-
-        const newAccessToken = res.data.accessToken;
-        localStorage.setItem("token", newAccessToken);
-
-        // Ulangi request yang tadi gagal dengan token baru
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        // Jika gagal refresh (refresh token juga mati), Logout paksa
-        localStorage.clear();
-        // window.location.href = "/login";
-        window.location.href = "/";
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  },
-);
 // axiosInstance.interceptors.response.use(
 //   (response) => response,
-
 //   async (error) => {
 //     const originalRequest = error.config;
-//     const status = error.response?.status;
 
-//     /*
-//      * Tidak ada response berarti:
-//      * - backend mati/restart
-//      * - jaringan gagal
-//      * - request diblokir CORS
-//      *
-//      * Jangan membaca error.response.status.
-//      * Jangan mencoba refresh token.
-//      */
-//     if (!error.response) {
-//       console.error("Backend tidak merespons:", {
-//         message: error.message,
-//         url: originalRequest?.url,
-//         method: originalRequest?.method,
-//       });
-
-//       return Promise.reject(error);
-//     }
-
-//     const isAuthRequest =
-//       originalRequest?.url?.includes("/login") ||
-//       originalRequest?.url?.includes("/token");
-
-//     if (
-//       status === 401 &&
-//       originalRequest &&
-//       !originalRequest._retry &&
-//       !isAuthRequest
-//     ) {
+//     // Jika error 401 dan belum pernah dicoba refresh
+//     if (error.response.status === 401 && !originalRequest._retry) {
 //       originalRequest._retry = true;
-
 //       try {
-//         /*
-//          * Semua request yang mendapat 401 secara bersamaan
-//          * memakai satu proses refresh token yang sama.
-//          */
-//         if (!refreshPromise) {
-//           refreshPromise = axios
-//             .get(`${API_URL}/token`, {
-//               withCredentials: true,
-//             })
-//             .then((response) => {
-//               const newAccessToken = response.data?.accessToken;
+//         // Panggil endpoint refresh token
+//         // const res = await axios.get("http://localhost:3000/token", {
+//         const res = await axios.get(`${API_URL}/token`, {
+//           withCredentials: true,
+//         });
 
-//               if (!newAccessToken) {
-//                 throw new Error("Backend tidak mengirim access token baru.");
-//               }
+//         const newAccessToken = res.data.accessToken;
+//         localStorage.setItem("token", newAccessToken);
 
-//               localStorage.setItem("token", newAccessToken);
-
-//               return newAccessToken;
-//             })
-//             .finally(() => {
-//               refreshPromise = null;
-//             });
-//         }
-
-//         const newAccessToken = await refreshPromise;
-
-//         originalRequest.headers = originalRequest.headers || {};
-
+//         // Ulangi request yang tadi gagal dengan token baru
 //         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
 //         return axiosInstance(originalRequest);
 //       } catch (refreshError) {
-//         const refreshStatus = refreshError.response?.status;
-
-//         /*
-//          * Logout hanya jika refresh token benar-benar
-//          * ditolak backend, bukan karena jaringan atau CORS.
-//          */
-//         if (refreshStatus === 401 || refreshStatus === 403) {
-//           localStorage.removeItem("token");
-//           localStorage.removeItem("user");
-//           window.location.href = "/";
-//         } else {
-//           console.error(
-//             "Gagal memperbarui token karena backend atau jaringan:",
-//             refreshError.message,
-//           );
-//         }
-
+//         // Jika gagal refresh (refresh token juga mati), Logout paksa
+//         localStorage.clear();
+//         // window.location.href = "/login";
+//         window.location.href = "/";
 //         return Promise.reject(refreshError);
 //       }
 //     }
-
 //     return Promise.reject(error);
 //   },
 // );
+axiosInstance.interceptors.response.use(
+  (response) => response,
+
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+
+    /*
+     * Tidak ada response berarti:
+     * - backend mati/restart
+     * - jaringan gagal
+     * - request diblokir CORS
+     *
+     * Jangan membaca error.response.status.
+     * Jangan mencoba refresh token.
+     */
+    if (!error.response) {
+      console.error("Backend tidak merespons:", {
+        message: error.message,
+        url: originalRequest?.url,
+        method: originalRequest?.method,
+      });
+
+      return Promise.reject(error);
+    }
+
+    const isAuthRequest =
+      originalRequest?.url?.includes("/login") ||
+      originalRequest?.url?.includes("/token");
+
+    if (
+      status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isAuthRequest
+    ) {
+      originalRequest._retry = true;
+
+      try {
+        /*
+         * Semua request yang mendapat 401 secara bersamaan
+         * memakai satu proses refresh token yang sama.
+         */
+        if (!refreshPromise) {
+          refreshPromise = axios
+            .get(`${API_URL}/token`, {
+              withCredentials: true,
+            })
+            .then((response) => {
+              const newAccessToken = response.data?.accessToken;
+
+              if (!newAccessToken) {
+                throw new Error("Backend tidak mengirim access token baru.");
+              }
+
+              localStorage.setItem("token", newAccessToken);
+
+              return newAccessToken;
+            })
+            .finally(() => {
+              refreshPromise = null;
+            });
+        }
+
+        const newAccessToken = await refreshPromise;
+
+        originalRequest.headers = originalRequest.headers || {};
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        const refreshStatus = refreshError.response?.status;
+
+        /*
+         * Logout hanya jika refresh token benar-benar
+         * ditolak backend, bukan karena jaringan atau CORS.
+         */
+        if (refreshStatus === 401 || refreshStatus === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/";
+        } else {
+          console.error(
+            "Gagal memperbarui token karena backend atau jaringan:",
+            refreshError.message,
+          );
+        }
+
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export default axiosInstance;
 
