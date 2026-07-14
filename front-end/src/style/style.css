@@ -2106,6 +2106,18 @@
   animation: spin 0.75s linear infinite;
   margin-bottom: 12px;
 }
+.qr-card {
+  flex: 1;
+  min-width: 340px;
+  background: white;
+  border-radius: 12px;
+  padding: 1.8rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+.qr-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
 
 /* SPINNER DI ANALITIK*/
 .loading-box {
@@ -3857,7 +3869,6 @@ p {
   color: #94a3b8;
 }
 
-
 .small-header {
   width: 25px;
   text-align: center;
@@ -3925,7 +3936,6 @@ p {
 .status-col.tv {
   color: #424242;
 }
-
 
 /* LEAVE TYPES / JENIS PENGAJUAN */
 .switch {
@@ -4206,7 +4216,6 @@ p {
   margin: 15px 0;
 }
 
-
 .approval-box {
   margin-top: 20px;
   padding: 16px;
@@ -4462,8 +4471,6 @@ p {
   margin-bottom: 7px;
   color: #374151;
 }
-
-
 
 /* EMPLOYEE PERFORMANCE / LAPORAN KINERJA KARYAWAN */
 .perf-name-cell {
@@ -6620,7 +6627,7 @@ p {
   border-radius: 0 4px 4px 0;
 }
 .bar-value {
-  color: #fff;
+  /* color: #fff; */
   font-size: 11px;
   font-weight: bold;
 }

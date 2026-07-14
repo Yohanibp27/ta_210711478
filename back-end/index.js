@@ -208,13 +208,13 @@ autoLeaveCheckerJob();
 //   console.log("Server up and running ... 17 April 2026");
 // });
 
-console.log("=== TIMEZONE CHECK ===");
-console.log("TZ ENV:", process.env.TZ);
-console.log("Node Time:", new Date().toString());
-console.log(
-  "Resolved Timezone:",
-  Intl.DateTimeFormat().resolvedOptions().timeZone,
-);
+// console.log("=== TIMEZONE CHECK ===");
+// console.log("TZ ENV:", process.env.TZ);
+// console.log("Node Time:", new Date().toString());
+// console.log(
+//   "Resolved Timezone:",
+//   Intl.DateTimeFormat().resolvedOptions().timeZone,
+// );
 
 // 13 juli 2026
 app.listen(PORT, "0.0.0.0", () => {

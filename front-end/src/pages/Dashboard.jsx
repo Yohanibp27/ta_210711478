@@ -448,82 +448,168 @@ function Dashboard() {
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
-      //   const res = await axios.get("http://localhost:3000/attendances", {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   });
-      const res = await axiosInstance.get("/attendances");
 
-      const data = res.data.data.filter((item) => {
-        const date = new Date(item.date + "T00:00:00");
+      const monthParam = `${currentYear}-${String(currentMonth + 1).padStart(
+        2,
+        "0",
+      )}`;
+
+      const res = await axiosInstance.get("/attendances", {
+        params: {
+          period: "Bulanan",
+          month: monthParam,
+        },
+      });
+
+      const attendanceData = Array.isArray(res.data?.data) ? res.data.data : [];
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const totalWeeks = Math.ceil(daysInMonth / 7);
+      const weeks = {};
+      for (let weekNumber = 1; weekNumber <= totalWeeks; weekNumber++) {
+        const startDay = (weekNumber - 1) * 7 + 1;
+        const endDay = Math.min(weekNumber * 7, daysInMonth);
+
+        weeks[`Minggu ${weekNumber}`] = {
+          week: `Minggu ${weekNumber}`,
+          range: `${startDay}–${endDay}`,
+          hadir: 0,
+          terlambat: 0,
+          "tidak-hadir": 0,
+          izin: 0,
+        };
+      }
+
+      const currentMonthData = attendanceData.filter((item) => {
+        if (!item.date) return false;
+
+        const attendanceDate = new Date(
+          `${String(item.date).slice(0, 10)}T00:00:00`,
+        );
+
         return (
-          date.getMonth() === currentMonth && date.getFullYear() === currentYear
+          !Number.isNaN(attendanceDate.getTime()) &&
+          attendanceDate.getMonth() === currentMonth &&
+          attendanceDate.getFullYear() === currentYear
         );
       });
-      const weeks = {
-        "Minggu 1": {
-          hadir: 0,
-          terlambat: 0,
-          "tidak-hadir": 0,
-          izin: 0,
-        },
-        "Minggu 2": {
-          hadir: 0,
-          terlambat: 0,
-          "tidak-hadir": 0,
-          izin: 0,
-        },
-        "Minggu 3": {
-          hadir: 0,
-          terlambat: 0,
-          "tidak-hadir": 0,
-          izin: 0,
-        },
-        "Minggu 4": {
-          hadir: 0,
-          terlambat: 0,
-          "tidak-hadir": 0,
-          izin: 0,
-        },
-      };
 
-      data.forEach((item) => {
-        const dateObj = new Date(item.date + "T00:00:00");
-        const day = dateObj.getDate();
+      currentMonthData.forEach((item) => {
+        const attendanceDate = new Date(
+          `${String(item.date).slice(0, 10)}T00:00:00`,
+        );
 
-        let weekKey = "";
-        if (day <= 7) weekKey = "Minggu 1";
-        else if (day <= 14) weekKey = "Minggu 2";
-        else if (day <= 21) weekKey = "Minggu 3";
-        else weekKey = "Minggu 4";
+        const dayOfMonth = attendanceDate.getDate();
+
+        /*
+         * Tanggal 1–7   = minggu 1
+         * Tanggal 8–14  = minggu 2
+         * Tanggal 15–21 = minggu 3
+         * Tanggal 22–28 = minggu 4
+         * Tanggal 29–31 = minggu 5
+         */
+        const weekNumber = Math.ceil(dayOfMonth / 7);
+        const weekKey = `Minggu ${weekNumber}`;
+
+        if (!weeks[weekKey]) return;
 
         switch (item.attendanceStatus) {
           case "Hadir":
-            weeks[weekKey].hadir++;
+          case "Dinas Luar":
+            weeks[weekKey].hadir += 1;
             break;
+
           case "Terlambat":
-            weeks[weekKey].terlambat++;
+            weeks[weekKey].terlambat += 1;
             break;
+
           case "Tidak Hadir":
-            weeks[weekKey]["tidak-hadir"]++;
+            weeks[weekKey]["tidak-hadir"] += 1;
             break;
+
           case "Izin":
           case "Sakit":
-            // weeks[weekKey]["izin-sakit"]++;
-            weeks[weekKey].izin++;
+          case "Cuti":
+            weeks[weekKey].izin += 1;
             break;
+
           default:
             break;
         }
       });
 
-      const formatted = Object.entries(weeks).map(([week, value]) => ({
-        week,
-        hadir: value.hadir,
-        terlambat: value.terlambat,
-        "tidak-hadir": value["tidak-hadir"],
-        // "izin-sakit": value["izin-sakit"],
-        izin: value.izin,
-      }));
+      const formatted = Object.values(weeks);
+
+      //   const data = res.data.data.filter((item) => {
+      //     const date = new Date(item.date + "T00:00:00");
+      //     return (
+      //       date.getMonth() === currentMonth && date.getFullYear() === currentYear
+      //     );
+      //   });
+      //   const weeks = {
+      //     "Minggu 1": {
+      //       hadir: 0,
+      //       terlambat: 0,
+      //       "tidak-hadir": 0,
+      //       izin: 0,
+      //     },
+      //     "Minggu 2": {
+      //       hadir: 0,
+      //       terlambat: 0,
+      //       "tidak-hadir": 0,
+      //       izin: 0,
+      //     },
+      //     "Minggu 3": {
+      //       hadir: 0,
+      //       terlambat: 0,
+      //       "tidak-hadir": 0,
+      //       izin: 0,
+      //     },
+      //     "Minggu 4": {
+      //       hadir: 0,
+      //       terlambat: 0,
+      //       "tidak-hadir": 0,
+      //       izin: 0,
+      //     },
+      //   };
+
+      //   data.forEach((item) => {
+      //     const dateObj = new Date(item.date + "T00:00:00");
+      //     const day = dateObj.getDate();
+
+      //     let weekKey = "";
+      //     if (day <= 7) weekKey = "Minggu 1";
+      //     else if (day <= 14) weekKey = "Minggu 2";
+      //     else if (day <= 21) weekKey = "Minggu 3";
+      //     else weekKey = "Minggu 4";
+
+      //     switch (item.attendanceStatus) {
+      //       case "Hadir":
+      //         weeks[weekKey].hadir++;
+      //         break;
+      //       case "Terlambat":
+      //         weeks[weekKey].terlambat++;
+      //         break;
+      //       case "Tidak Hadir":
+      //         weeks[weekKey]["tidak-hadir"]++;
+      //         break;
+      //       case "Izin":
+      //       case "Sakit":
+      //         // weeks[weekKey]["izin-sakit"]++;
+      //         weeks[weekKey].izin++;
+      //         break;
+      //       default:
+      //         break;
+      //     }
+      //   });
+
+      //   const formatted = Object.entries(weeks).map(([week, value]) => ({
+      //     week,
+      //     hadir: value.hadir,
+      //     terlambat: value.terlambat,
+      //     "tidak-hadir": value["tidak-hadir"],
+      //     // "izin-sakit": value["izin-sakit"],
+      //     izin: value.izin,
+      //   }));
 
       setChartData(formatted);
     } catch (err) {
@@ -531,6 +617,15 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getBarHeight = (value) => {
+    const numericValue = Number(value) || 0;
+
+    // Nilai 0 tetap memiliki garis tipis agar label terlihat
+    if (numericValue === 0) return 2;
+
+    return Math.min(numericValue * 10, 100);
   };
 
   return (
@@ -667,7 +762,12 @@ function Dashboard() {
               chartData.map((data, i) => (
                 <div key={i} className="bar-group">
                   <div className="bars-container">
-                    <div className="bar-wrapper">
+                    <div
+                      className="bar-wrapper"
+                      style={{
+                        "--bar-height": `${getBarHeight(data.hadir)}%`,
+                      }}
+                    >
                       <span className="bar-value">{data.hadir}</span>
                       <div
                         className={`bar green`}
@@ -677,7 +777,12 @@ function Dashboard() {
                       ></div>
                       <span className="bar-label">Hadir</span>
                     </div>
-                    <div className="bar-wrapper">
+                    <div
+                      className="bar-wrapper"
+                      style={{
+                        "--bar-height": `${getBarHeight(data.hadir)}%`,
+                      }}
+                    >
                       <span className="bar-value">{data.terlambat}</span>
                       <div
                         className={`bar yellow`}
@@ -687,7 +792,12 @@ function Dashboard() {
                       ></div>
                       <span className="bar-label">Terlambat</span>
                     </div>
-                    <div className="bar-wrapper">
+                    <div
+                      className="bar-wrapper"
+                      style={{
+                        "--bar-height": `${getBarHeight(data.hadir)}%`,
+                      }}
+                    >
                       <span className="bar-value">{data["tidak-hadir"]}</span>
                       <div
                         className="bar red"
@@ -697,7 +807,12 @@ function Dashboard() {
                       ></div>
                       <span className="bar-label">Tidak Hadir</span>
                     </div>
-                    <div className="bar-wrapper">
+                    <div
+                      className="bar-wrapper"
+                      style={{
+                        "--bar-height": `${getBarHeight(data.hadir)}%`,
+                      }}
+                    >
                       <span className="bar-value">{data.izin}</span>
                       <div
                         className="bar blue"
@@ -709,6 +824,12 @@ function Dashboard() {
                     </div>
                   </div>
                   <span className="bar-label">{data.week}</span>
+                  {/* <div className="bar-week-label">
+                    <span className="bar-label">{data.week}</span>
+                    <small className="bar-week-range">
+                      Tanggal {data.range}
+                    </small>
+                  </div> */}
                 </div>
               ))
             )}

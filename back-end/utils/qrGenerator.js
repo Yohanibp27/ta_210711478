@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import QRCode from "qrcode";
+// import QRCode from "qrcode";
 import crypto from "crypto";
 
 // PAKE CRYPTO
@@ -16,6 +16,7 @@ export const generateDailyQR = () => {
 };
 
 // BELUM DIPAKE SOALNYA INI BUAT REFRESH QR CODE PER 30 DETIK
+// UDAH DIPAKE!!
 import QrCodeToken from "../models/QrCodeToken.js";
 import { Op } from "sequelize";
 

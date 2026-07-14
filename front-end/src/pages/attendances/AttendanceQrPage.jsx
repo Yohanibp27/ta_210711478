@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 // import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../../api/axios.js";
+// import "../../style/QrCodeSettings.css";
 
 const AttendanceQrPage = ({ fullScreen = false }) => {
   //   const token = localStorage.getItem("token");
@@ -184,8 +185,14 @@ const AttendanceQrPage = ({ fullScreen = false }) => {
 
       setQrUrl("");
 
+      //   setErrorMessage(
+      //     error.response?.data?.message ||
+      //       error.message ||
+      //       "Gagal memuat QR Code",
+      //   );
       setErrorMessage(
-        error.response?.data?.message ||
+        error.response?.data?.error ||
+          error.response?.data?.message ||
           error.message ||
           "Gagal memuat QR Code",
       );
