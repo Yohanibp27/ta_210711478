@@ -768,7 +768,7 @@ function Dashboard() {
                         "--bar-height": `${getBarHeight(data.hadir)}%`,
                       }}
                     >
-                      <span className="bar-value">{data.hadir}</span>
+                      <span className="bar-value-dash">{data.hadir}</span>
                       <div
                         className={`bar green`}
                         style={{
@@ -783,7 +783,7 @@ function Dashboard() {
                         "--bar-height": `${getBarHeight(data.hadir)}%`,
                       }}
                     >
-                      <span className="bar-value">{data.terlambat}</span>
+                      <span className="bar-value-dash">{data.terlambat}</span>
                       <div
                         className={`bar yellow`}
                         style={{
@@ -798,7 +798,9 @@ function Dashboard() {
                         "--bar-height": `${getBarHeight(data.hadir)}%`,
                       }}
                     >
-                      <span className="bar-value">{data["tidak-hadir"]}</span>
+                      <span className="bar-value-dash">
+                        {data["tidak-hadir"]}
+                      </span>
                       <div
                         className="bar red"
                         style={{
@@ -813,7 +815,7 @@ function Dashboard() {
                         "--bar-height": `${getBarHeight(data.hadir)}%`,
                       }}
                     >
-                      <span className="bar-value">{data.izin}</span>
+                      <span className="bar-value-dash">{data.izin}</span>
                       <div
                         className="bar blue"
                         style={{

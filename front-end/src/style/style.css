@@ -6627,7 +6627,7 @@ p {
   border-radius: 0 4px 4px 0;
 }
 .bar-value {
-  /* color: #fff; */
+  color: #fff;
   font-size: 11px;
   font-weight: bold;
 }
@@ -7945,7 +7945,7 @@ p {
   height: 100%;
   justify-content: flex-end;
 }
-.bar-value {
+.bar-value-dash {
   font-size: 0.75rem;
   font-weight: bold;
   margin-bottom: 5px;
