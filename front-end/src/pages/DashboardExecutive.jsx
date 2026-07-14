@@ -56,6 +56,7 @@ import axiosInstance from "../api/axios.js";
 import jsPDF from "jspdf";
 import XLSX from "xlsx-js-style";
 import autoTable from "jspdf-autotable";
+import { formatDateIndo } from "../utils/dateHelper.js";
 
 const WorkloadAnalysis = () => {
   const [period, setPeriod] = useState("month");
@@ -3473,6 +3474,15 @@ const WorkloadAnalysis = () => {
               </div>
               <div className="tooltip-summary-section">
                 <div className="summary-label">RINGKASAN HARI INI</div>
+                <div className="summary-row">
+                  <span>
+                    <FaCalendar className="icon-blue" /> Tanggal
+                  </span>
+                  <span className="time-val">
+                    {formatDateIndo(hoveredTimeline.tanggal_presensi) ||
+                      "yyyy-mm-dd"}
+                  </span>
+                </div>
                 <div className="summary-row">
                   <span>
                     <FaSignInAlt className="icon-blue" /> Masuk
