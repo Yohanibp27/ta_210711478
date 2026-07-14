@@ -2419,12 +2419,14 @@ const WorkloadAnalysis = () => {
               <strong>{sortedWorkload[0]?.jam} jam aktivitas tercatat</strong>,
               setara{" "}
               <strong>
-                {(sortedWorkload[0]?.jam > 0
-                  ? (sortedWorkload[0]?.validActivity +
-                      sortedWorkload[0]?.outOfShift) /
-                    sortedWorkload[0]?.jam
-                  : 0
-                ).toFixed(1)}{" "}
+                {formatDecimalID(
+                  (sortedWorkload[0]?.jam > 0
+                    ? (sortedWorkload[0]?.validActivity +
+                        sortedWorkload[0]?.outOfShift) /
+                      sortedWorkload[0]?.jam
+                    : 0
+                  ).toFixed(1),
+                )}{" "}
                 tindakan per jam
               </strong>
               .{" "}
