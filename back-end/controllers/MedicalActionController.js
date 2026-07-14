@@ -13,6 +13,43 @@ import Department from "../models/DepartmentModel.js";
 import Role from "../models/RoleModel.js";
 import db from "../config/Database.js";
 
+const TIMEZONE_OFFSET = 7 * 60;
+const normalizeClock = (value) => {
+  if (!value) return null;
+
+  const time = String(value).trim();
+
+  if (/^\d{2}:\d{2}$/.test(time)) {
+    return `${time}:00`;
+  }
+
+  if (/^\d{2}:\d{2}:\d{2}$/.test(time)) {
+    return time;
+  }
+
+  return null;
+};
+
+const toWibInstant = (value) => {
+  return moment(value).utcOffset(TIMEZONE_OFFSET);
+};
+
+const buildWibDateTime = (date, time) => {
+  const normalizedTime = normalizeClock(time);
+
+  if (!date || !normalizedTime) {
+    return null;
+  }
+
+  const parsed = moment(
+    `${date} ${normalizedTime}`,
+    "YYYY-MM-DD HH:mm:ss",
+    true,
+  ).utcOffset(TIMEZONE_OFFSET, true);
+
+  return parsed.isValid() ? parsed : null;
+};
+
 // helper penentu shift dokte berdasarkan jam
 function determineShiftId(userType, checkInTime, workshifts) {
   const hour = moment(checkInTime).tz("Asia/Jakarta").hour();
@@ -408,22 +445,55 @@ const buildDashboardFilters = (req) => {
 
   if (selectedDateParam) {
     const [yearStr, monthStr, dayStr] = selectedDateParam.split("-");
-    if (period === "Mingguan" || selectedDateParam.includes("-W")) {
-      const momentWeek = moment(selectedDateParam, "YYYY-[W]WW");
-      startDate = momentWeek.clone().startOf("isoWeek").toDate();
-      endDate = momentWeek.clone().add(1, "weeks").startOf("isoWeek").toDate();
-    } else {
-      const year = parseInt(yearStr, 10);
-      const month = parseInt(monthStr, 10) - 1;
+    // if (period === "Mingguan" || selectedDateParam.includes("-W")) {
+    //   const momentWeek = moment(selectedDateParam, "YYYY-[W]WW");
+    //   startDate = momentWeek.clone().startOf("isoWeek").toDate();
+    //   endDate = momentWeek.clone().add(1, "weeks").startOf("isoWeek").toDate();
+    // } else {
+    //   const year = parseInt(yearStr, 10);
+    //   const month = parseInt(monthStr, 10) - 1;
 
-      if (period === "Harian" || dayStr) {
-        const day = parseInt(dayStr, 10) || 1;
-        startDate = new Date(year, month, day);
-        endDate = new Date(year, month, day + 1);
-      } else {
-        startDate = new Date(year, month, 1);
-        endDate = new Date(year, month + 1, 1);
-      }
+    //   if (period === "Harian" || dayStr) {
+    //     const day = parseInt(dayStr, 10) || 1;
+    //     startDate = new Date(year, month, day);
+    //     endDate = new Date(year, month, day + 1);
+    //   } else {
+    //     startDate = new Date(year, month, 1);
+    //     endDate = new Date(year, month + 1, 1);
+    //   }
+    // }
+
+    if (period === "Mingguan" || selectedDateParam.includes("-W")) {
+      const startMoment = moment(selectedDateParam, "GGGG-[W]WW", true)
+        .utcOffset(TIMEZONE_OFFSET, true)
+        .startOf("isoWeek");
+
+      const endMoment = startMoment.clone().add(1, "week");
+
+      startDate = startMoment.toDate();
+      endDate = endMoment.toDate();
+    } else if (period === "Harian" || dayStr) {
+      const startMoment = moment(
+        `${selectedDateParam} 00:00:00`,
+        "YYYY-MM-DD HH:mm:ss",
+        true,
+      ).utcOffset(TIMEZONE_OFFSET, true);
+
+      const endMoment = startMoment.clone().add(1, "day");
+
+      startDate = startMoment.toDate();
+      endDate = endMoment.toDate();
+    } else {
+      const startMoment = moment(
+        `${selectedDateParam}-01 00:00:00`,
+        "YYYY-MM-DD HH:mm:ss",
+        true,
+      ).utcOffset(TIMEZONE_OFFSET, true);
+
+      const endMoment = startMoment.clone().add(1, "month");
+
+      startDate = startMoment.toDate();
+      endDate = endMoment.toDate();
     }
 
     dateFilter.dateOfAction = { [Op.gte]: startDate, [Op.lt]: endDate };
@@ -1070,38 +1140,80 @@ export const getWorkloadDoctors = async (req, res) => {
         let outOfShift = 0;
 
         const userShifts = shiftsRaw.filter((s) => s.userId === row.userId);
+        // userActions.forEach((act) => {
+        //   let actionTime = new Date(act.dateOfAction);
+
+        //   let actionDateLocal = new Date(
+        //     actionTime.getTime() - actionTime.getTimezoneOffset() * 60000,
+        //   )
+        //     .toISOString()
+        //     .split("T")[0];
+
+        //   let isValidShift = userShifts.some((shift) => {
+        //     if (shift.date !== actionDateLocal) return false;
+        //     if (
+        //       !shift.workShift ||
+        //       !shift.workShift.startTime ||
+        //       !shift.workShift.endTime
+        //     )
+        //       return false;
+
+        //     let shiftStart = new Date(
+        //       `${shift.date}T${shift.workShift.startTime}`,
+        //     );
+        //     let shiftEnd = new Date(`${shift.date}T${shift.workShift.endTime}`);
+
+        //     if (shiftEnd < shiftStart) {
+        //       shiftEnd = new Date(shiftEnd.getTime() + 24 * 60 * 60 * 1000);
+        //     }
+
+        //     return actionTime >= shiftStart && actionTime <= shiftEnd;
+        //   });
+
+        //   if (isValidShift) validActivity++;
+        //   else outOfShift++;
+        // });
         userActions.forEach((act) => {
-          let actionTime = new Date(act.dateOfAction);
+          const actionTime = toWibInstant(act.dateOfAction);
 
-          let actionDateLocal = new Date(
-            actionTime.getTime() - actionTime.getTimezoneOffset() * 60000,
-          )
-            .toISOString()
-            .split("T")[0];
+          if (!actionTime.isValid()) {
+            outOfShift++;
+            return;
+          }
 
-          let isValidShift = userShifts.some((shift) => {
-            if (shift.date !== actionDateLocal) return false;
-            if (
-              !shift.workShift ||
-              !shift.workShift.startTime ||
-              !shift.workShift.endTime
-            )
+          const isValidShift = userShifts.some((shift) => {
+            if (!shift.workShift?.startTime || !shift.workShift?.endTime) {
               return false;
-
-            let shiftStart = new Date(
-              `${shift.date}T${shift.workShift.startTime}`,
-            );
-            let shiftEnd = new Date(`${shift.date}T${shift.workShift.endTime}`);
-
-            if (shiftEnd < shiftStart) {
-              shiftEnd = new Date(shiftEnd.getTime() + 24 * 60 * 60 * 1000);
             }
 
-            return actionTime >= shiftStart && actionTime <= shiftEnd;
+            const shiftDate = moment(shift.date).format("YYYY-MM-DD");
+
+            const shiftStart = buildWibDateTime(
+              shiftDate,
+              shift.workShift.startTime,
+            );
+
+            let shiftEnd = buildWibDateTime(shiftDate, shift.workShift.endTime);
+
+            if (!shiftStart || !shiftEnd) {
+              return false;
+            }
+
+            if (!shiftEnd.isAfter(shiftStart)) {
+              shiftEnd = shiftEnd.add(1, "day");
+            }
+
+            return (
+              actionTime.valueOf() >= shiftStart.valueOf() &&
+              actionTime.valueOf() <= shiftEnd.valueOf()
+            );
           });
 
-          if (isValidShift) validActivity++;
-          else outOfShift++;
+          if (isValidShift) {
+            validActivity++;
+          } else {
+            outOfShift++;
+          }
         });
         workloadGrouped[doctorKey].validActivity += validActivity;
         workloadGrouped[doctorKey].outOfShift += outOfShift;
@@ -1600,17 +1712,31 @@ export const getHeatmap = async (req, res) => {
     });
 
     const processedShifts = shiftsRaw.map((shift) => {
-      let start = new Date(
-        `${shift.date}T${shift.workShift?.startTime || "00:00:00"}`,
-      );
+      //   let start = new Date(
+      //     `${shift.date}T${shift.workShift?.startTime || "00:00:00"}`,
+      //   );
 
-      let end = new Date(
-        `${shift.date}T${shift.workShift?.endTime || "00:00:00"}`,
+      //   let end = new Date(
+      //     `${shift.date}T${shift.workShift?.endTime || "00:00:00"}`,
+      //   );
+      const shiftDate = moment(shift.date).format("YYYY-MM-DD");
+      const startMoment = buildWibDateTime(
+        shiftDate,
+        shift.workShift?.startTime || "00:00:00",
       );
-
-      if (end < start) {
-        end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+      let endMoment = buildWibDateTime(
+        shiftDate,
+        shift.workShift?.endTime || "00:00:00",
+      );
+      if (startMoment && endMoment && !endMoment.isAfter(startMoment)) {
+        endMoment = endMoment.add(1, "day");
       }
+      const start = startMoment?.toDate() || null;
+      const end = endMoment?.toDate() || null;
+
+      //   if (end < start) {
+      //     end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+      //   }
 
       const posName =
         shift.user?.position?.name || shift.user?.Position?.name || "";
@@ -1667,9 +1793,15 @@ export const getHeatmap = async (req, res) => {
     allActions.forEach((act) => {
       const unit = act.serviceUnit || "Tanpa Unit";
       const u = unit.toUpperCase().trim();
-      const actionDate = new Date(act.dateOfAction);
-      const actionDateStr = moment(actionDate).format("YYYY-MM-DD");
-      const hour = actionDate.getHours();
+      //   const actionDate = new Date(act.dateOfAction);
+      //   const actionDateStr = moment(actionDate).format("YYYY-MM-DD");
+      //   const hour = actionDate.getHours();
+      const actionDate = toWibInstant(act.dateOfAction);
+      if (!actionDate.isValid()) {
+        return;
+      }
+      const actionDateStr = actionDate.format("YYYY-MM-DD");
+      const hour = actionDate.hour();
 
       if (!heatmapUnitsMap[unit]) heatmapUnitsMap[unit] = {};
 
