@@ -29,7 +29,7 @@ const TemplateCard = ({ icon, title, description, color }) => {
     } else if (title === "Laporan Kinerja Karyawan") {
       navigate("/performance-report");
     } else if (title === "Analitik Shift Kerja") {
-      navigate("/shift-analytic");
+      navigate("/shift-report");
       // } else if (title === "Laporan Keterlambatan") {
       //   navigate("/delay-report");
     } else if (title === "Laporan Lembur") {

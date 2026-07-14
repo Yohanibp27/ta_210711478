@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-// import axios from "axios";
 import { FaFileExcel, FaFilePdf } from "react-icons/fa";
 // import "../../style/AttendanceReportPreview.css";
 import { formatTime } from "../../utils/dateHelper.js";
@@ -51,7 +50,6 @@ const getRangeFromWeek = (weekString) => {
 };
 
 const AttendanceReportPreview = () => {
-  //   const token = localStorage.getItem("token");
   const [attendances, setAttendances] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -67,44 +65,130 @@ const AttendanceReportPreview = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchInitData();
+    fetchOrganizationData();
   }, []);
 
-  const fetchInitData = async () => {
-    setLoading(true);
-    try {
-      //   const [resAttend, resDepts, resDivs] = await Promise.all([
-      //     axios.get("http://localhost:3000/attendances", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/departments", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/divisions", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //   ]);
+  useEffect(() => {
+    fetchAttendanceData();
+  }, [reportType, selectedPeriod, selectedWeek, selectedYear]);
 
-      const [resAttend, resDepts, resDivs] = await Promise.all([
-        axiosInstance.get("/attendances"),
+  const fetchOrganizationData = async () => {
+    try {
+      const [resDepts, resDivs] = await Promise.all([
         axiosInstance.get("/departments"),
         axiosInstance.get("/divisions"),
       ]);
-      setAttendances(resAttend.data.data || []);
-      setDepartments(resDepts.data.data || []);
-      setDivisions(resDivs.data.data || []);
-    } catch (err) {
-      console.error("Gagal memuat data:", err);
+
+      setDepartments(
+        Array.isArray(resDepts.data?.data) ? resDepts.data.data : [],
+      );
+
+      setDivisions(Array.isArray(resDivs.data?.data) ? resDivs.data.data : []);
+    } catch (error) {
+      console.error(
+        "Gagal memuat data organisasi:",
+        error.response?.data || error.message,
+      );
+    }
+  };
+
+  //   const fetchInitData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const [resAttend, resDepts, resDivs] = await Promise.all([
+  //         axiosInstance.get("/attendances"),
+  //         axiosInstance.get("/departments"),
+  //         axiosInstance.get("/divisions"),
+  //       ]);
+  //       setAttendances(resAttend.data.data || []);
+  //       setDepartments(resDepts.data.data || []);
+  //       setDivisions(resDivs.data.data || []);
+  //     } catch (err) {
+  //       console.error("Gagal memuat data:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  const fetchAttendanceData = async () => {
+    setLoading(true);
+
+    try {
+      let attendanceData = [];
+
+      if (reportType === "bulanan") {
+        const response = await axiosInstance.get("/attendances", {
+          params: {
+            period: "Bulanan",
+            month: selectedPeriod,
+          },
+        });
+
+        attendanceData = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
+      } else if (reportType === "mingguan") {
+        if (!selectedWeek) {
+          setAttendances([]);
+          return;
+        }
+
+        const response = await axiosInstance.get("/attendances", {
+          params: {
+            period: "Mingguan",
+            month: selectedWeek,
+          },
+        });
+
+        attendanceData = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
+      } else if (reportType === "tahunan") {
+        /*
+         * Backend belum memiliki period Tahunan.
+         * Ambil satu per satu setiap bulan agar tidak mengirim
+         * 12 request sekaligus ke Railway.
+         */
+        for (let month = 1; month <= 12; month++) {
+          const monthValue = `${selectedYear}-${String(month).padStart(2, "0")}`;
+
+          const response = await axiosInstance.get("/attendances", {
+            params: {
+              period: "Bulanan",
+              month: monthValue,
+            },
+          });
+
+          const monthData = Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+
+          attendanceData.push(...monthData);
+        }
+      }
+
+      setAttendances(attendanceData);
+    } catch (error) {
+      console.error(
+        "Gagal memuat data presensi:",
+        error.response?.data || error.message,
+      );
+
+      setAttendances([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedDeptId = departments.find((d) => d.name === selectedDept)?.id;
+  const selectedDeptId = departments.find(
+    (dept) => dept.name === selectedDept,
+  )?.id;
 
   const availableDivisions = useMemo(() => {
-    if (selectedDept === "SEMUA" || selectedDept === "semua") return divisions;
-    return divisions.filter((d) => d.departmentId === selectedDeptId);
+    if (selectedDept === "SEMUA") return divisions;
+    return divisions.filter(
+      (div) => Number(div.departmentId) === Number(selectedDeptId),
+    );
   }, [selectedDept, selectedDeptId, divisions]);
 
   const resolveStatus = (att) => {
@@ -135,7 +219,9 @@ const AttendanceReportPreview = () => {
         att.user?.position?.division?.name === selectedDiv;
 
       // Filter Waktu berdasarkan reportType
-      const attDate = new Date(att.date);
+      //   const attDate = new Date(att.date);
+      const rawDate = String(att.date || "").slice(0, 10);
+      const attDate = new Date(`${rawDate}T00:00:00`);
       let matchTime = true;
 
       if (reportType === "bulanan") {
@@ -197,7 +283,7 @@ const AttendanceReportPreview = () => {
             DL: 0,
             C: 0,
             I: 0,
-            A: 0,
+            TH: 0,
             TV: 0,
           };
         }
@@ -208,7 +294,7 @@ const AttendanceReportPreview = () => {
         else if (s === "CUTI") employeeMap[userId].records[month].C++;
         else if (s === "IZIN") employeeMap[userId].records[month].I++;
         else if (s === "TIDAK VALID") employeeMap[userId].records[month].TV++;
-        else employeeMap[userId].records[month].A++;
+        else employeeMap[userId].records[month].TH++;
       }
     });
 
@@ -447,6 +533,627 @@ const AttendanceReportPreview = () => {
     }
   };
 
+  const monthNamesLong = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  const monthNamesShort = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Agt",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ];
+
+  const formatDateID = (date) => {
+    if (!date || Number.isNaN(new Date(date).getTime())) {
+      return "-";
+    }
+
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(date));
+  };
+
+  const getExportContext = () => {
+    let periodLabel = "";
+    let filePeriod = "";
+
+    if (reportType === "bulanan") {
+      const [year, month] = selectedPeriod.split("-");
+
+      periodLabel = `${monthNamesLong[Number(month) - 1]} ${year}`;
+      filePeriod = selectedPeriod;
+    } else if (reportType === "mingguan") {
+      const weekRange = getRangeFromWeek(selectedWeek);
+
+      periodLabel =
+        weekRange.start && weekRange.end
+          ? `${formatDateID(weekRange.start)} sampai ${formatDateID(
+              weekRange.end,
+            )}`
+          : selectedWeek || "Minggu belum dipilih";
+
+      filePeriod = selectedWeek || "mingguan";
+    } else {
+      periodLabel = `Tahun ${selectedYear}`;
+      filePeriod = String(selectedYear);
+    }
+
+    const departmentLabel =
+      selectedDept === "SEMUA" ? "Semua Fungsi" : selectedDept;
+
+    const divisionLabel = selectedDiv === "SEMUA" ? "Semua Unit" : selectedDiv;
+
+    const safePeriodLabel =
+      `${reportType}_${filePeriod}_${departmentLabel}_${divisionLabel}`
+        .replace(/[^a-zA-Z0-9_-]+/g, "_")
+        .replace(/_+/g, "_");
+
+    return {
+      periodLabel,
+      filePeriod,
+      departmentLabel,
+      divisionLabel,
+      safePeriodLabel,
+    };
+  };
+
+  const getExportTableData = () => {
+    if (reportType === "mingguan") {
+      const weekDays = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+
+      const columns = [
+        "No.",
+        "Nama Karyawan",
+        "NIP",
+        ...weekDays.flatMap((day) => [`${day} Masuk`, `${day} Pulang`]),
+        "Total Kehadiran",
+      ];
+
+      const body = reportData.map((employee, index) => {
+        const timeColumns = [];
+
+        for (let day = 1; day <= 7; day += 1) {
+          const record = employee.records[day];
+
+          timeColumns.push(record ? formatTime(record.in) : "-");
+          timeColumns.push(record ? formatTime(record.out) : "-");
+        }
+
+        const totalAttendance = Object.values(employee.records).filter(
+          (record) =>
+            record.status === "HADIR" ||
+            record.status === "TERLAMBAT" ||
+            record.status === "DINAS LUAR",
+        ).length;
+
+        return [
+          index + 1,
+          employee.name,
+          employee.nip || "-",
+          ...timeColumns,
+          totalAttendance,
+        ];
+      });
+
+      return { columns, body };
+    }
+
+    if (reportType === "bulanan") {
+      const [year, month] = selectedPeriod.split("-").map(Number);
+
+      const dayColumns = Array.from(
+        { length: daysInSelectedMonth },
+        (_, index) => {
+          const day = index + 1;
+          return `${day}\n${getDayName(day, month, year)}`;
+        },
+      );
+
+      const columns = ["No.", "Nama Karyawan", "NIP", ...dayColumns];
+
+      const body = reportData.map((employee, index) => {
+        const attendanceColumns = Array.from(
+          { length: daysInSelectedMonth },
+          (_, dayIndex) => {
+            const record = employee.records[dayIndex + 1];
+
+            if (!record) {
+              return "-";
+            }
+
+            return `${formatTime(record.in)}\n${formatTime(record.out)}`;
+          },
+        );
+
+        return [
+          index + 1,
+          employee.name,
+          employee.nip || "-",
+          ...attendanceColumns,
+        ];
+      });
+
+      return { columns, body };
+    }
+
+    // Laporan tahunan dibuat vertikal per karyawan dan bulan
+    // agar tetap terbaca ketika diekspor ke PDF.
+    const columns = [
+      "No.",
+      "Nama Karyawan",
+      "NIP",
+      "Bulan",
+      "H",
+      "T",
+      "DL",
+      "I",
+      "C",
+      "TH",
+      "TV",
+    ];
+
+    let rowNumber = 1;
+
+    const body = reportData.flatMap((employee) =>
+      monthNamesShort.map((monthName, monthIndex) => {
+        const record = employee.records[monthIndex + 1] || {
+          H: 0,
+          T: 0,
+          DL: 0,
+          I: 0,
+          C: 0,
+          TH: 0,
+          TV: 0,
+        };
+
+        return [
+          rowNumber++,
+          employee.name,
+          employee.nip || "-",
+          monthName,
+          record.H || 0,
+          record.T || 0,
+          record.DL || 0,
+          record.I || 0,
+          record.C || 0,
+          record.TH || 0,
+          record.TV || 0,
+        ];
+      }),
+    );
+
+    return { columns, body };
+  };
+
+  const handleExportPDF = async () => {
+    if (reportData.length === 0) {
+      alert("Tidak ada data yang dapat diekspor.");
+      return;
+    }
+
+    try {
+      const {
+        periodLabel,
+        filePeriod,
+        departmentLabel,
+        divisionLabel,
+        safePeriodLabel,
+      } = getExportContext();
+
+      const { columns, body } = getExportTableData();
+
+      /*
+       * Bulanan memakai A3 karena jumlah kolom tanggal bisa
+       * mencapai 31 kolom.
+       */
+      const pageFormat = reportType === "bulanan" ? "a3" : "a4";
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: pageFormat,
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      const printedAt = new Date().toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const fileName = `Laporan_Presensi_${safePeriodLabel}.pdf`;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+
+      doc.text("RUMAH SAKIT BHAYANGKARA TK. III INDRAMAYU", pageWidth / 2, 12, {
+        align: "center",
+      });
+
+      doc.setFontSize(11);
+
+      doc.text(
+        `LAPORAN DATA PRESENSI ${reportType.toUpperCase()}`,
+        pageWidth / 2,
+        19,
+        {
+          align: "center",
+        },
+      );
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+
+      doc.text(`Periode: ${periodLabel}`, 14, 27);
+      doc.text(`Fungsi: ${departmentLabel}`, 14, 32);
+      doc.text(`Unit: ${divisionLabel}`, 14, 37);
+      doc.text(`Tanggal Cetak: ${printedAt}`, 14, 42);
+
+      autoTable(doc, {
+        startY: 47,
+        theme: "grid",
+        showHead: "everyPage",
+        head: [columns],
+        body: body.length > 0 ? body : [["-", "Tidak ada data", "-"]],
+
+        styles: {
+          fontSize:
+            reportType === "bulanan" ? 5 : reportType === "mingguan" ? 6.5 : 7,
+          cellPadding: reportType === "bulanan" ? 1 : 1.5,
+          valign: "middle",
+          halign: "center",
+          overflow: "linebreak",
+        },
+
+        headStyles: {
+          fillColor: [71, 85, 105],
+          textColor: 255,
+          fontStyle: "bold",
+          halign: "center",
+        },
+
+        columnStyles: {
+          0: {
+            cellWidth: 8,
+            halign: "center",
+          },
+          1: {
+            cellWidth: reportType === "bulanan" ? 40 : 42,
+            halign: "left",
+          },
+          2: {
+            cellWidth: reportType === "bulanan" ? 25 : 28,
+            halign: "left",
+          },
+        },
+
+        margin: {
+          left: 10,
+          right: 10,
+          top: 15,
+          bottom: 12,
+        },
+
+        didDrawPage: () => {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7);
+
+          doc.text(`Laporan Presensi ${reportType} – ${periodLabel}`, 10, 8);
+        },
+      });
+
+      const pageCount = doc.internal.getNumberOfPages();
+
+      for (let page = 1; page <= pageCount; page += 1) {
+        doc.setPage(page);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+
+        doc.text(
+          `Halaman ${page} dari ${pageCount}`,
+          pageWidth - 12,
+          pageHeight - 6,
+          {
+            align: "right",
+          },
+        );
+      }
+
+      const pdfBlob = doc.output("blob");
+
+      doc.save(fileName);
+
+      const formData = new FormData();
+
+      formData.append("file", pdfBlob, fileName);
+      formData.append(
+        "reportName",
+        `Laporan Presensi ${reportType} ${periodLabel}`,
+      );
+      formData.append("period", filePeriod);
+      formData.append("status", "Selesai");
+      formData.append("reportType", "PDF");
+
+      await axiosInstance.post("/history", formData);
+    } catch (error) {
+      console.error(
+        "Gagal mengekspor laporan presensi ke PDF:",
+        error.response?.data || error.message,
+      );
+
+      alert("Laporan PDF gagal dibuat. Silakan coba kembali.");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (reportData.length === 0) {
+      alert("Tidak ada data yang dapat diekspor.");
+      return;
+    }
+
+    try {
+      const {
+        periodLabel,
+        filePeriod,
+        departmentLabel,
+        divisionLabel,
+        safePeriodLabel,
+      } = getExportContext();
+
+      const { columns, body } = getExportTableData();
+
+      const printedAt = new Date().toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const fileName = `Laporan_Presensi_${safePeriodLabel}.xlsx`;
+
+      const worksheetData = [
+        ["RUMAH SAKIT BHAYANGKARA TK. III INDRAMAYU"],
+        [`LAPORAN DATA PRESENSI ${reportType.toUpperCase()}`],
+        [`Periode: ${periodLabel}`],
+        [`Fungsi: ${departmentLabel}`],
+        [`Unit: ${divisionLabel}`],
+        [`Tanggal Cetak: ${printedAt}`],
+        [],
+        columns,
+        ...body,
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+      const lastColumnIndex = Math.max(columns.length - 1, 0);
+
+      worksheet["!merges"] = [
+        {
+          s: { r: 0, c: 0 },
+          e: { r: 0, c: lastColumnIndex },
+        },
+        {
+          s: { r: 1, c: 0 },
+          e: { r: 1, c: lastColumnIndex },
+        },
+        {
+          s: { r: 2, c: 0 },
+          e: { r: 2, c: lastColumnIndex },
+        },
+        {
+          s: { r: 3, c: 0 },
+          e: { r: 3, c: lastColumnIndex },
+        },
+        {
+          s: { r: 4, c: 0 },
+          e: { r: 4, c: lastColumnIndex },
+        },
+        {
+          s: { r: 5, c: 0 },
+          e: { r: 5, c: lastColumnIndex },
+        },
+      ];
+
+      const range = XLSX.utils.decode_range(worksheet["!ref"]);
+
+      const headerRowIndex = 7;
+
+      for (let row = range.s.r; row <= range.e.r; row += 1) {
+        for (let column = range.s.c; column <= range.e.c; column += 1) {
+          const address = XLSX.utils.encode_cell({
+            r: row,
+            c: column,
+          });
+
+          const cell = worksheet[address];
+
+          if (!cell) continue;
+
+          if (row <= 5) {
+            cell.s = {
+              font: {
+                bold: true,
+                sz: row === 0 ? 14 : 11,
+              },
+              alignment: {
+                horizontal: "center",
+                vertical: "center",
+              },
+            };
+
+            continue;
+          }
+
+          if (row === headerRowIndex) {
+            cell.s = {
+              font: {
+                bold: true,
+                color: {
+                  rgb: "FFFFFF",
+                },
+              },
+              fill: {
+                fgColor: {
+                  rgb: "475569",
+                },
+              },
+              alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true,
+              },
+              border: {
+                top: {
+                  style: "thin",
+                  color: { rgb: "000000" },
+                },
+                bottom: {
+                  style: "thin",
+                  color: { rgb: "000000" },
+                },
+                left: {
+                  style: "thin",
+                  color: { rgb: "000000" },
+                },
+                right: {
+                  style: "thin",
+                  color: { rgb: "000000" },
+                },
+              },
+            };
+
+            continue;
+          }
+
+          if (row > headerRowIndex) {
+            cell.s = {
+              alignment: {
+                horizontal: column === 1 || column === 2 ? "left" : "center",
+                vertical: "center",
+                wrapText: true,
+              },
+              border: {
+                top: {
+                  style: "thin",
+                  color: { rgb: "B7B7B7" },
+                },
+                bottom: {
+                  style: "thin",
+                  color: { rgb: "B7B7B7" },
+                },
+                left: {
+                  style: "thin",
+                  color: { rgb: "B7B7B7" },
+                },
+                right: {
+                  style: "thin",
+                  color: { rgb: "B7B7B7" },
+                },
+              },
+            };
+          }
+        }
+      }
+
+      worksheet["!cols"] = columns.map((_, index) => {
+        if (index === 0) return { wch: 7 };
+        if (index === 1) return { wch: 35 };
+        if (index === 2) return { wch: 22 };
+
+        if (reportType === "bulanan") {
+          return { wch: 12 };
+        }
+
+        if (reportType === "mingguan") {
+          return { wch: 14 };
+        }
+
+        return { wch: 12 };
+      });
+
+      worksheet["!rows"] = worksheetData.map((_, index) => ({
+        hpt: index === headerRowIndex ? 32 : index > headerRowIndex ? 28 : 20,
+      }));
+
+      worksheet["!autofilter"] = {
+        ref: `A${headerRowIndex + 1}:${XLSX.utils.encode_col(
+          lastColumnIndex,
+        )}${Math.max(worksheetData.length, headerRowIndex + 1)}`,
+      };
+
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Presensi");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const excelBlob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const downloadUrl = URL.createObjectURL(excelBlob);
+
+      const downloadLink = document.createElement("a");
+
+      downloadLink.href = downloadUrl;
+      downloadLink.download = fileName;
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      URL.revokeObjectURL(downloadUrl);
+
+      const formData = new FormData();
+
+      formData.append("file", excelBlob, fileName);
+      formData.append(
+        "reportName",
+        `Laporan Presensi ${reportType} ${periodLabel}`,
+      );
+      formData.append("period", filePeriod);
+      formData.append("status", "Selesai");
+      formData.append("reportType", "XLSX");
+
+      await axiosInstance.post("/history", formData);
+    } catch (error) {
+      console.error(
+        "Gagal mengekspor laporan presensi ke Excel:",
+        error.response?.data || error.message,
+      );
+
+      alert("Laporan Excel gagal dibuat. Silakan coba kembali.");
+    }
+  };
+
   return (
     <div className="content-page">
       <div className="table-content-card">
@@ -461,13 +1168,18 @@ const AttendanceReportPreview = () => {
           <div className="right-actions">
             <button
               className="button is-danger"
-              onClick={() => alert("Anda klik export PDF")}
+              onClick={handleExportPDF}
+              disabled={loading || reportData.length === 0}
             >
-              <FaFilePdf /> Export PDF
+              <FaFilePdf /> PDF
             </button>
-            <button className="button is-success">
-              <FaFileExcel onClick={() => alert("Anda klik export Excel")} />
-              Export Excel
+            <button
+              className="button is-success"
+              onClick={handleExportExcel}
+              disabled={loading || reportData.length === 0}
+            >
+              <FaFileExcel />
+              Excel
             </button>
           </div>
         </div>
@@ -493,9 +1205,10 @@ const AttendanceReportPreview = () => {
                 value={selectedDept}
                 onChange={(e) => {
                   setSelectedDept(e.target.value);
+                  setSelectedDiv("SEMUA");
                 }}
               >
-                <option value="semua">Semua Fungsi</option>
+                <option value="SEMUA">Semua Fungsi</option>
                 {departments.map((dept) => (
                   <option key={dept.id} value={dept.name}>
                     {dept.name}

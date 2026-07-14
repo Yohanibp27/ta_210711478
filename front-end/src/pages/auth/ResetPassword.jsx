@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-// import axios from "axios";
 import axiosInstance from "../../api/axios";
 import Logo from "../../assets/images/bhayangkara.png";
 

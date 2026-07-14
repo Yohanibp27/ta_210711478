@@ -23,12 +23,18 @@ import {
 import Avatar from "../../assets/avatar-ungu.png";
 import axiosInstance from "../../api/axios.js";
 
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
+
 const AttendanceReport = () => {
-  //   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-  const [selectedPeriod, setSelectedPeriod] = useState(
-    new Date().toISOString().substring(0, 7),
-  );
+  //   const [selectedPeriod, setSelectedPeriod] = useState(
+  //     new Date().toISOString().substring(0, 7),
+  //   );
+  const currentDate = new Date();
+  const currentMonthValue = `${currentDate.getFullYear()}-${String(
+    currentDate.getMonth() + 1,
+  ).padStart(2, "0")}`;
+  const [selectedPeriod, setSelectedPeriod] = useState(currentMonthValue);
   const [attendances, setAttendances] = useState([]);
   const [users, setUsers] = useState([]);
   const [divisions, setDivisions] = useState([]);
@@ -45,38 +51,36 @@ const AttendanceReport = () => {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [selectedPeriod]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      //   const [divRes, shiftRes, userRes, attRes] = await Promise.all([
-      //     axios.get("http://localhost:3000/divisions", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/workshifts", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/users", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/attendances", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //   ]);
-
       const [divRes, shiftRes, userRes, attRes] = await Promise.all([
         axiosInstance.get("/divisions"),
         axiosInstance.get("/workshifts"),
         axiosInstance.get("/users"),
-        axiosInstance.get("/attendances"),
+        axiosInstance.get("/attendances", {
+          params: {
+            period: "Bulanan",
+            month: selectedPeriod,
+          },
+        }),
       ]);
-      setDivisions(divRes.data.data || []);
-      setShifts(shiftRes.data.data || []);
-      setUsers(userRes.data.data || []);
-      setAttendances(attRes.data.data || []);
+      //   setDivisions(divRes.data.data || []);
+      //   setShifts(shiftRes.data.data || []);
+      //   setUsers(userRes.data.data || []);
+      //   setAttendances(attRes.data.data || []);
+      setDivisions(Array.isArray(divRes.data?.data) ? divRes.data.data : []);
+      setShifts(Array.isArray(shiftRes.data?.data) ? shiftRes.data.data : []);
+      setUsers(Array.isArray(userRes.data?.data) ? userRes.data.data : []);
+      setAttendances(Array.isArray(attRes.data?.data) ? attRes.data.data : []);
     } catch (e) {
-      console.log("Gagal memuat data", e);
+      console.log(
+        "Gagal memuat laporan presensi:",
+        e.response?.data || e.message,
+      );
+      setAttendances([]);
     } finally {
       setLoading(false);
     }
@@ -168,10 +172,16 @@ const AttendanceReport = () => {
         nama:
           [user.titlePrefix, user.fullName].filter(Boolean).join(" ") || "-",
         divisi: user.position?.division?.name || "-",
-        avatarUrl: user.profilePhoto
-          ? //   ? `http://localhost:3000/uploads/profilePhotos/${user.profilePhoto}`
-            `/uploads/profilePhotos/${user.profilePhoto}`
-          : Avatar,
+        // avatarUrl: user.profilePhoto
+        //   ? `http://localhost:3000/uploads/profilePhotos/${user.profilePhoto}`
+        //   : Avatar,
+        avatarUrl:
+          user.avatarUrl ||
+          (user.profilePhoto
+            ? `${API_URL}/uploads/profilePhotos/${encodeURIComponent(
+                user.profilePhoto,
+              )}`
+            : Avatar),
         hadir: hadirCount,
         telat: terlambatCount,
         terlambat: `${avgLate} mnt`,
@@ -267,24 +277,13 @@ const AttendanceReport = () => {
     formData.append("file", file);
     try {
       alert("Sedang memproses import, mohon tunggu...");
-      //   const response = await axios.post(
-      //     "http://localhost:3000/attendances/import",
-      //     formData,
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${token}`,
-      //         "Content-Type": "multipart/form-data",
-      //       },
-      //     },
-      //   );
-
       const response = await axiosInstance.post(
         "/attendances/import",
         formData,
       );
       console.log("Hasil Import Attendances:", response.data);
       alert("Import Presensi Berhasil!");
-      fetchInitialData();
+      await fetchInitialData();
       e.target.value = null;
     } catch (error) {
       console.error("Gagal import attendance excel:", error);
@@ -463,7 +462,10 @@ const AttendanceReport = () => {
                 type="month"
                 className="select-input"
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
+                onChange={(e) => {
+                  setSelectedPeriod(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
 
               <button
@@ -649,8 +651,12 @@ const AttendanceReport = () => {
                         <td className="perf-name-cell">
                           <img
                             className="staff-avatar"
-                            src={item.avatarUrl}
+                            src={item.avatarUrl || Avatar}
                             alt={item.nama}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = Avatar;
+                            }}
                           />
                           <div>
                             <div className="user-name">{item.nama}</div>
