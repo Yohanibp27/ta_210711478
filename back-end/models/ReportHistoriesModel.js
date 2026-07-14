@@ -44,6 +44,7 @@ const ReportHistory = db.define(
   {
     freezeTableName: true,
     timestamps: true,
+    tableName: "reporthistory",
   },
 );
 

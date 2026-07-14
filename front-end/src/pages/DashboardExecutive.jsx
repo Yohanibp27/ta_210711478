@@ -136,14 +136,33 @@ const WorkloadAnalysis = () => {
   };
 
   const fetchDashboardData = useCallback(async () => {
+    if (!selectedMonth) return;
     try {
       setLoading(true);
 
-      let apiParams = {
-        period: period,
-        ...(period === "day" && { day: selectedMonth }),
-        ...(period !== "day" && { month: selectedMonth }),
-      };
+      //   let apiParams = {
+      //     period: period,
+      //     ...(period === "day" && { day: selectedMonth }),
+      //     ...(period !== "day" && { month: selectedMonth }),
+      //   };
+
+      let apiParams;
+      if (period === "day") {
+        apiParams = {
+          period: "day",
+          day: selectedMonth,
+        };
+      } else if (period === "week") {
+        apiParams = {
+          period: "week",
+          week: selectedMonth,
+        };
+      } else {
+        apiParams = {
+          period: "month",
+          month: selectedMonth,
+        };
+      }
 
       const summaryRes = await axiosInstance.get(`/dashboard/summary`, {
         params: apiParams,
@@ -178,7 +197,12 @@ const WorkloadAnalysis = () => {
         `/dashboard/attendance-timeline`,
         { params: apiParams },
       );
-      const timelineData = timelineRes.data?.attendanceTimeline || {};
+      //   const timelineData = timelineRes.data?.attendanceTimeline || {};
+      const attendanceTimelineData = Array.isArray(
+        timelineRes.data?.attendanceTimeline,
+      )
+        ? timelineRes.data.attendanceTimeline
+        : [];
 
       setDashboardData({
         stats: summaryData.stats || {
@@ -210,10 +234,12 @@ const WorkloadAnalysis = () => {
           unitDistFullData.total_tindakan_20_unitlainnya || "",
         heatmap: formattedHeatmap,
         heatmapSummary: heatmapSummaryData,
-        timeline: timelineData,
+        // timeline: timelineData,
+        timeline: attendanceTimelineData,
       });
 
-      setTimelineData(timelineData);
+      //   setTimelineData(timelineData);
+      setTimelineData(attendanceTimelineData);
     } catch (e) {
       console.error("Gagal mengambil data dashboard:", e);
     } finally {

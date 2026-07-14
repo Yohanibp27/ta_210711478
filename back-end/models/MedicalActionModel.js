@@ -76,6 +76,7 @@ const MedicalAction = db.define(
   },
   {
     freezeTableName: true,
+    tableName: "medicalactions",
     indexes: [
       {
         unique: true,
