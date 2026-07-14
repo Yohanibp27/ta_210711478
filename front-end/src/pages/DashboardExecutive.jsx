@@ -2409,7 +2409,7 @@ const WorkloadAnalysis = () => {
                 )}
                 %
               </span>{" "}
-              dari total tindakan medis .{" "}
+              dari total tindakan medis.{" "}
               <strong>{sortedWorkload[0]?.name}</strong> memiliki beban kerja
               tertinggi yaitu,{" "}
               <strong>
