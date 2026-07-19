@@ -81,12 +81,33 @@ const ShiftReport = () => {
       //     }),
       //   ]);
 
+      let attendanceParams = {};
+
+      if (filterType === "Harian") {
+        attendanceParams = {
+          date: selectedPeriod,
+        };
+      } else if (filterType === "Mingguan") {
+        attendanceParams = {
+          period: "Mingguan",
+          month: selectedWeek,
+        };
+      } else if (filterType === "Bulanan") {
+        attendanceParams = {
+          period: "Bulanan",
+          month: `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`,
+        };
+      }
+
       const [resShifts, resAttendances] = await Promise.all([
         axiosInstance.get("/shifts"),
-        axiosInstance.get("/attendances"),
+        axiosInstance.get("/attendances", { params: attendanceParams }),
       ]);
       const allAssignments = resShifts.data.data || [];
+      console.log("shifts", allAssignments);
+
       const allAttendances = resAttendances.data.data || [];
+      console.log("attendaces", allAttendances);
 
       const filteredAssignments = allAssignments.filter((asg) => {
         const dStr = extractDate(asg.date);
@@ -158,18 +179,40 @@ const ShiftReport = () => {
       filteredAttendances.forEach((att) => {
         const attDateStr = extractDate(att.date);
         const currentUserId = att.userId || att.user?.id;
-        console.log(currentUserId);
+        console.log("currentUserId", currentUserId);
 
-        const userAsg = filteredAssignments.find(
-          (asg) =>
-            Number(asg.userId) === Number(currentUserId) &&
-            extractDate(asg.date) === attDateStr,
+        // const userAsg = filteredAssignments.find(
+        //   (asg) =>
+        //     Number(asg.userId) === Number(currentUserId) &&
+        //     extractDate(asg.date) === attDateStr,
+        // );
+        if (!currentUserId || !attDateStr) return;
+        const userAsg = filteredAssignments.find((asg) => {
+          const assignmentUserId = asg.userId ?? asg.user?.id ?? asg.User?.id;
+
+          const assignmentDate = extractDate(
+            asg.date ?? asg.shiftDate ?? asg.assignmentDate,
+          );
+
+          return (
+            Number(assignmentUserId) === Number(currentUserId) &&
+            assignmentDate === attDateStr
+          );
+        });
+        console.log("userAsg", userAsg);
+        if (!userAsg) {
+          console.warn("Shift assignment tidak ditemukan:", {
+            currentUserId,
+            attDateStr,
+          });
+          return;
+        }
+
+        // let wsId = att.workShiftId;
+        const wsId = Number(
+          att.workShiftId ?? userAsg.workShiftId ?? userAsg.workShift?.id,
         );
-        console.log(userAsg);
-        if (!userAsg) return;
-
-        let wsId = att.workShiftId;
-        console.log(wsId);
+        // console.log(wsId);
 
         if (wsId && grouped[wsId]) {
           const status = att.attendanceStatus?.toLowerCase();
@@ -898,7 +941,7 @@ const ShiftReport = () => {
                 ))
               : shiftData.map((s, i) => (
                   <div key={i} className="bar-group">
-                    <span className="bar-value">{s.attendance}%</span>
+                    <span className="bar-value-dash">{s.attendance}%</span>
                     <div
                       className={`bar ${s.color}`}
                       style={{ height: `${s.attendance}%` }}
@@ -934,7 +977,7 @@ const ShiftReport = () => {
                 ))
               : shiftData.map((s, i) => (
                   <div key={i} className="bar-group">
-                    <span className="bar-value">{s.lateAvg} min</span>
+                    <span className="bar-value-dash">{s.lateAvg} min</span>
                     <div
                       className="bar red"
                       style={{

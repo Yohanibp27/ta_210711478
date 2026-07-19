@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-// import axios from "axios";
 import {
   FaAngleLeft,
   FaAngleRight,
@@ -23,7 +22,6 @@ import autoTable from "jspdf-autotable";
 import axiosInstance from "../../api/axios.js";
 
 const MonthlyReport = () => {
-  const token = localStorage.getItem("token");
   const [selectedPeriod, setSelectedPeriod] = useState(
     new Date().toISOString().substring(0, 7),
   );
@@ -77,10 +75,22 @@ const MonthlyReport = () => {
     return Math.ceil((day + firstDay) / 7);
   };
 
+  //   const calculateGrowth = (current, previous) => {
+  //     if (previous === 0 && current === 0) return 0;
+  //     if (previous === 0) return 100; // Asumsi kenaikan maksimal jika sblmnya 0
+  //     return (((current - previous) / previous) * 100).toFixed(1);
+  //   };
   const calculateGrowth = (current, previous) => {
-    if (previous === 0 && current === 0) return 0;
-    if (previous === 0) return 100; // Asumsi kenaikan maksimal jika sblmnya 0
-    return (((current - previous) / previous) * 100).toFixed(1);
+    const currentValue = Number(current) || 0;
+    const previousValue = Number(previous) || 0;
+
+    if (previousValue === 0) {
+      return null;
+    }
+
+    return Number(
+      (((currentValue - previousValue) / previousValue) * 100).toFixed(1),
+    );
   };
 
   const processReportData = useCallback((users, attendances, periodStr) => {
@@ -103,8 +113,15 @@ const MonthlyReport = () => {
         return d.getMonth() === tMonth && d.getFullYear() === tYear;
       });
 
-      const uniqueDates = new Set(monthAttendances.map((a) => a.date));
-      const totalWorkDays = uniqueDates.size > 0 ? uniqueDates.size : 1;
+      //   const uniqueDates = new Set(monthAttendances.map((a) => a.date));
+      //   const totalWorkDays = uniqueDates.size > 0 ? uniqueDates.size : 1;
+
+      const uniqueDates = new Set(
+        monthAttendances
+          .filter((attendance) => attendance.date)
+          .map((attendance) => String(attendance.date).slice(0, 10)),
+      );
+      const totalWorkDays = uniqueDates.size;
 
       let divMap = {};
       let statsCounter = {
@@ -262,33 +279,100 @@ const MonthlyReport = () => {
     }
   }, []);
 
+  const getPreviousPeriod = (period) => {
+    const [year, month] = period.split("-").map(Number);
+
+    const previousDate = new Date(year, month - 2, 1);
+
+    return `${previousDate.getFullYear()}-${String(
+      previousDate.getMonth() + 1,
+    ).padStart(2, "0")}`;
+  };
+
+  //   const fetchData = useCallback(async () => {
+  //     setLoading(true);
+  //     try {
+  //       //   const [resUsers, resAttendances] = await Promise.all([
+  //       //     axios.get("http://localhost:3000/users", {
+  //       //       headers: { Authorization: `Bearer ${token}` },
+  //       //     }),
+  //       //     axios.get("http://localhost:3000/attendances", {
+  //       //       headers: { Authorization: `Bearer ${token}` },
+  //       //     }),
+  //       //   ]);
+
+  //       const [resUsers, resAttendances] = await Promise.all([
+  //         axiosInstance.get("/users"),
+  //         axiosInstance.get("/attendances", {
+  //           params: {
+  //             period: "Bulanan",
+  //             month: selectedPeriod,
+  //           },
+  //         }),
+  //       ]);
+  //       processReportData(
+  //         resUsers.data.data || [],
+  //         resAttendances.data.data || [],
+  //         selectedPeriod,
+  //       );
+  //     } catch (e) {
+  //       console.error("Error fetching report data:", e);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }, [processReportData, selectedPeriod]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
-    try {
-      //   const [resUsers, resAttendances] = await Promise.all([
-      //     axios.get("http://localhost:3000/users", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //     axios.get("http://localhost:3000/attendances", {
-      //       headers: { Authorization: `Bearer ${token}` },
-      //     }),
-      //   ]);
 
-      const [resUsers, resAttendances] = await Promise.all([
-        axiosInstance.get("/users"),
-        axiosInstance.get("/attendances"),
-      ]);
+    try {
+      const previousPeriod = getPreviousPeriod(selectedPeriod);
+
+      const [resUsers, resCurrentAttendances, resPreviousAttendances] =
+        await Promise.all([
+          axiosInstance.get("/users"),
+          axiosInstance.get("/attendances", {
+            params: {
+              period: "Bulanan",
+              month: selectedPeriod,
+            },
+          }),
+          axiosInstance.get("/attendances", {
+            params: {
+              period: "Bulanan",
+              month: previousPeriod,
+            },
+          }),
+        ]);
+
+      const users = Array.isArray(resUsers.data?.data)
+        ? resUsers.data.data
+        : [];
+      const currentAttendances = Array.isArray(resCurrentAttendances.data?.data)
+        ? resCurrentAttendances.data.data
+        : [];
+      const previousAttendances = Array.isArray(
+        resPreviousAttendances.data?.data,
+      )
+        ? resPreviousAttendances.data.data
+        : [];
+
       processReportData(
-        resUsers.data.data || [],
-        resAttendances.data.data || [],
+        users,
+        [...currentAttendances, ...previousAttendances],
         selectedPeriod,
       );
-    } catch (e) {
-      console.error("Error fetching report data:", e);
+    } catch (error) {
+      console.error(
+        "Error fetching report data:",
+        error.response?.data || error.message,
+      );
+
+      setReportData([]);
     } finally {
       setLoading(false);
     }
-  }, [token, processReportData, selectedPeriod]);
+  }, [processReportData, selectedPeriod]);
 
   useEffect(() => {
     fetchData();
@@ -322,18 +406,49 @@ const MonthlyReport = () => {
     return sortableItems;
   }, [reportData, sort]);
 
-  const RenderGrowth = ({ value }) => {
-    if (parseFloat(value) === 0) {
+  //   const RenderGrowth = ({ value }) => {
+  //     if (parseFloat(value) === 0) {
+  //       return (
+  //         <span className="stat-text-dash gray" style={{ color: "black" }}>
+  //           <span style={{ marginRight: "5px" }}></span> 0%
+  //         </span>
+  //       );
+  //     }
+  //     const isPositive = value > 0;
+  //     return (
+  //       <span className={`stat-text-dash ${isPositive ? "green" : "red"}`}>
+  //         {isPositive ? <FaArrowUp /> : <FaArrowDown />} {Math.abs(value)}%
+  //       </span>
+  //     );
+  //   };
+
+  const RenderGrowth = ({ value, lowerIsBetter = false }) => {
+    if (value === null || value === undefined) {
       return (
-        <span className="stat-text-dash gray" style={{ color: "black" }}>
-          <span style={{ marginRight: "5px" }}></span> 0%
-        </span>
+        <span className="stat-text-dash gray">Belum ada data pembanding</span>
       );
     }
-    const isPositive = value > 0;
+
+    const numericValue = Number(value);
+
+    if (numericValue === 0) {
+      return <span className="stat-text-dash gray">0%</span>;
+    }
+
+    const isIncrease = numericValue > 0;
+
+    const colorClass = lowerIsBetter
+      ? isIncrease
+        ? "red"
+        : "green"
+      : isIncrease
+        ? "green"
+        : "red";
+
     return (
-      <span className={`stat-text-dash ${isPositive ? "green" : "red"}`}>
-        {isPositive ? <FaArrowUp /> : <FaArrowDown />} {Math.abs(value)}%
+      <span className={`stat-text-dash ${colorClass}`}>
+        {isIncrease ? <FaArrowUp /> : <FaArrowDown />}{" "}
+        {Math.abs(numericValue).toLocaleString("id-ID")}%
       </span>
     );
   };

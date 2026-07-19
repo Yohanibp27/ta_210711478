@@ -23,6 +23,32 @@ import autoTable from "jspdf-autotable";
 import XLSX from "xlsx-js-style";
 import axiosInstance from "../../api/axios";
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:3000"
+).replace(/\/$/, "");
+
+const getProfilePhotoUrl = (photo) => {
+  if (!photo) return Avatar;
+
+  const photoValue = String(photo).trim();
+
+  // Apabila backend mengirim URL penuh selain localhost
+  if (
+    /^https?:\/\//i.test(photoValue) &&
+    !photoValue.includes("localhost") &&
+    !photoValue.includes("127.0.0.1")
+  ) {
+    return photoValue;
+  }
+
+  // Ambil nama file apabila nilai masih berupa URL localhost
+  const fileName = photoValue.split("/").pop();
+
+  return `${API_BASE_URL}/uploads/profilePhotos/${encodeURIComponent(
+    fileName,
+  )}`;
+};
+
 const OvertimeReport = () => {
   //   const token = localStorage.getItem("token");
   const [attendances, setAttendances] = useState([]);
@@ -930,11 +956,12 @@ const OvertimeReport = () => {
                           <td className="perf-name-cell">
                             <img
                               className="staff-avatar"
-                              src={
-                                d.photo
-                                  ? `http://localhost:3000/uploads/profilePhotos/${d.photo}`
-                                  : Avatar
-                              }
+                              //   src={
+                              //     d.photo
+                              //       ? `http://localhost:3000/uploads/profilePhotos/${d.photo}`
+                              //       : Avatar
+                              //   }
+                              src={getProfilePhotoUrl(d.photo)}
                               alt={d.name}
                             />
                             <div className="user-info">

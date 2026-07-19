@@ -25,8 +25,84 @@ import autoTable from "jspdf-autotable";
 import Avatar from "../../assets/avatar-ungu.png";
 import axiosInstance from "../../api/axios.js";
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:3000"
+).replace(/\/$/, "");
+
+const getProfilePhotoUrl = (photo) => {
+  if (!photo) return Avatar;
+
+  const photoValue = String(photo).trim();
+
+  // Apabila backend mengirim URL penuh selain localhost
+  if (
+    /^https?:\/\//i.test(photoValue) &&
+    !photoValue.includes("localhost") &&
+    !photoValue.includes("127.0.0.1")
+  ) {
+    return photoValue;
+  }
+
+  // Ambil nama file apabila nilai masih berupa URL localhost
+  const fileName = photoValue.split("/").pop();
+
+  return `${API_BASE_URL}/uploads/profilePhotos/${encodeURIComponent(
+    fileName,
+  )}`;
+};
+
+const formatLocalDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getSelectedMonthWeekInfo = (selectedPeriod, weekOffset) => {
+  const [year, month] = selectedPeriod.split("-").map(Number);
+
+  const monthStart = new Date(year, month - 1, 1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const monthEnd = new Date(year, month, 0);
+  monthEnd.setHours(23, 59, 59, 999);
+
+  /*
+   * Cari hari Senin dari minggu pertama bulan terpilih.
+   * Minggu pertama dapat memuat tanggal dari bulan sebelumnya.
+   */
+  const firstWeekStart = new Date(monthStart);
+  const firstDayNumber = firstWeekStart.getDay();
+
+  const distanceToMonday = firstDayNumber === 0 ? -6 : 1 - firstDayNumber;
+
+  firstWeekStart.setDate(firstWeekStart.getDate() + distanceToMonday);
+  firstWeekStart.setHours(0, 0, 0, 0);
+
+  const startOfWeek = new Date(firstWeekStart);
+  startOfWeek.setDate(firstWeekStart.getDate() + weekOffset * 7);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
+
+  const totalWeeks = Math.ceil(
+    (monthEnd.getTime() - firstWeekStart.getTime() + 1) / millisecondsPerWeek,
+  );
+
+  return {
+    monthStart,
+    monthEnd,
+    startOfWeek,
+    endOfWeek,
+    totalWeeks,
+  };
+};
+
 const EmployeePerformance = () => {
-  const token = localStorage.getItem("token");
   const [employees, setEmployees] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [divisionStats, setDivisionStats] = useState([]);
@@ -92,7 +168,12 @@ const EmployeePerformance = () => {
 
       const [resUsers, resAttendances, resDivs] = await Promise.all([
         axiosInstance.get("/users"),
-        axiosInstance.get("/attendances"),
+        axiosInstance.get("/attendances", {
+          params: {
+            period: "Bulanan",
+            month: selectedPeriod,
+          },
+        }),
         axiosInstance.get("/divisions"),
       ]);
 
@@ -257,17 +338,24 @@ const EmployeePerformance = () => {
         }));
       setTopLateEmployees(topLate);
 
-      const now = new Date();
-      const startOfWeek = new Date(now);
-      const dayDiff = now.getDay() === 0 ? -6 : 1 - now.getDay();
-      startOfWeek.setDate(now.getDate() + dayDiff + currentWeekOffset * 7);
-      startOfWeek.setHours(0, 0, 0, 0);
+      //   const now = new Date();
+      //   const startOfWeek = new Date(now);
+      //   const dayDiff = now.getDay() === 0 ? -6 : 1 - now.getDay();
+      //   startOfWeek.setDate(now.getDate() + dayDiff + currentWeekOffset * 7);
+      //   startOfWeek.setHours(0, 0, 0, 0);
 
-      const startOfMonth = new Date(selectedPeriod + "-01");
-      const endOfMonth = new Date(startOfMonth);
-      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
-      endOfMonth.setDate(0);
-      endOfMonth.setHours(23, 59, 59, 999);
+      //   const startOfMonth = new Date(selectedPeriod + "-01");
+      //   const endOfMonth = new Date(startOfMonth);
+      //   endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+      //   endOfMonth.setDate(0);
+      //   endOfMonth.setHours(23, 59, 59, 999);
+
+      const {
+        monthStart: startOfMonth,
+        monthEnd: endOfMonth,
+        startOfWeek,
+        endOfWeek,
+      } = getSelectedMonthWeekInfo(selectedPeriod, currentWeekOffset);
 
       const dayAnalysis = [];
       const daysName = [
@@ -295,35 +383,88 @@ const EmployeePerformance = () => {
         dayAnalysis.push({
           day: daysName[i],
           displayDate: dateString,
-          fullDate: targetDate.toISOString().split("T")[0],
+          //   fullDate: targetDate.toISOString().split("T")[0],
+          fullDate: formatLocalDateKey(targetDate),
           count: 0,
           totalMinutes: 0,
           isOutsideMonth,
         });
       }
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      endOfWeek.setHours(23, 59, 59, 999);
+      //   const endOfWeek = new Date(startOfWeek);
+      //   endOfWeek.setDate(startOfWeek.getDate() + 6);
+      //   endOfWeek.setHours(23, 59, 59, 999);
+
+      //   filteredAttendances.forEach((att) => {
+      //     if (!att.date) return;
+      //     const attDateObj = new Date(att.date);
+      //     if (attDateObj < startOfWeek || attDateObj > endOfWeek) return;
+      //     if (attDateObj < startOfMonth || attDateObj > endOfMonth) return;
+      //     if (att.attendanceStatus?.toLowerCase() !== "terlambat") return;
+      //     const attDate = att.date.split("T")[0];
+      //     const dayMatch = dayAnalysis.find((d) => d.fullDate === attDate);
+      //     if (!dayMatch) return;
+      //     const timePart = att.checkInTime?.includes("T")
+      //       ? att.checkInTime.split("T")[1]
+      //       : att.checkInTime;
+      //     if (!timePart) return;
+      //     const [hIn, mIn] = timePart.split(":").map(Number);
+      //     const masukMenit = hIn * 60 + mIn;
+
+      //     let standarMenit = 7 * 60;
+      //     if (hIn >= 11 && hIn <= 18) standarMenit = 15 * 60;
+      //     else if (hIn >= 19 || hIn <= 4) standarMenit = 23 * 60;
+      //     let diff = masukMenit - standarMenit;
+
+      //     if (hIn <= 4 && standarMenit === 1380) {
+      //       diff = (hIn + 24) * 60 + mIn - standarMenit;
+      //     }
+
+      //     dayMatch.count += 1;
+      //     dayMatch.totalMinutes += diff > 0 ? diff : 0;
+      //   });
 
       filteredAttendances.forEach((att) => {
         if (!att.date) return;
-        const attDateObj = new Date(att.date);
-        if (attDateObj < startOfWeek || attDateObj > endOfWeek) return;
-        if (attDateObj < startOfMonth || attDateObj > endOfMonth) return;
-        if (att.attendanceStatus?.toLowerCase() !== "terlambat") return;
-        const attDate = att.date.split("T")[0];
-        const dayMatch = dayAnalysis.find((d) => d.fullDate === attDate);
+
+        const attendanceDateKey = String(att.date).slice(0, 10);
+
+        const attDateObj = new Date(`${attendanceDateKey}T00:00:00`);
+
+        if (attDateObj < startOfWeek || attDateObj > endOfWeek) {
+          return;
+        }
+
+        if (attDateObj < startOfMonth || attDateObj > endOfMonth) {
+          return;
+        }
+
+        if (att.attendanceStatus?.toLowerCase() !== "terlambat") {
+          return;
+        }
+
+        const dayMatch = dayAnalysis.find(
+          (day) => day.fullDate === attendanceDateKey,
+        );
+
         if (!dayMatch) return;
+
         const timePart = att.checkInTime?.includes("T")
           ? att.checkInTime.split("T")[1]
           : att.checkInTime;
+
         if (!timePart) return;
+
         const [hIn, mIn] = timePart.split(":").map(Number);
         const masukMenit = hIn * 60 + mIn;
 
         let standarMenit = 7 * 60;
-        if (hIn >= 11 && hIn <= 18) standarMenit = 15 * 60;
-        else if (hIn >= 19 || hIn <= 4) standarMenit = 23 * 60;
+
+        if (hIn >= 11 && hIn <= 18) {
+          standarMenit = 15 * 60;
+        } else if (hIn >= 19 || hIn <= 4) {
+          standarMenit = 23 * 60;
+        }
+
         let diff = masukMenit - standarMenit;
 
         if (hIn <= 4 && standarMenit === 1380) {
@@ -535,11 +676,11 @@ const EmployeePerformance = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, selectedPeriod, selectedDivision]);
+  }, [selectedPeriod, selectedDivision, currentWeekOffset]);
 
   useEffect(() => {
     calculatePerformance();
-  }, [calculatePerformance, currentWeekOffset]);
+  }, [calculatePerformance]);
 
   const getAttendanceStatus = (value) => {
     if (value >= 85) return "good";
@@ -1015,6 +1156,11 @@ const EmployeePerformance = () => {
     }
   };
 
+  const { totalWeeks } = getSelectedMonthWeekInfo(
+    selectedPeriod,
+    currentWeekOffset,
+  );
+
   return (
     <div className="content-page">
       <section className="status-grid-sect">
@@ -1172,7 +1318,11 @@ const EmployeePerformance = () => {
                 type="month"
                 className="select-input"
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
+                onChange={(e) => {
+                  setSelectedPeriod(e.target.value);
+                  setCurrentPage(1);
+                  setCurrentWeekOffset(0);
+                }}
               />
               <button className="button is-danger" onClick={handleExportPDF}>
                 <FaFilePdf /> PDF
@@ -1350,11 +1500,12 @@ const EmployeePerformance = () => {
                         <td className="perf-name-cell">
                           <img
                             className="staff-avatar"
-                            src={
-                              e.photo
-                                ? `http://localhost:3000/uploads/profilePhotos/${e.photo}`
-                                : Avatar
-                            }
+                            // src={
+                            //   e.photo
+                            //     ? `http://localhost:3000/uploads/profilePhotos/${e.photo}`
+                            //     : Avatar
+                            // }
+                            src={getProfilePhotoUrl(e.photo)}
                             alt={e.name.charAt(0)}
                           />
                           <div>
@@ -1954,7 +2105,8 @@ const EmployeePerformance = () => {
                 </div>
                 <div className="progress-bg">
                   <div
-                    className="progress-bar-fill"
+                    // className="progress-bar-fill"
+                    className="progress-bar"
                     style={{
                       width: `${item.percentage}%`,
                       backgroundColor: item.color,
@@ -2147,7 +2299,7 @@ const EmployeePerformance = () => {
               Pola Keterlambatan Mingguan
             </h3>
           )}
-          <div className="week-navigation">
+          {/* <div className="week-navigation">
             <button
               onClick={() => setCurrentWeekOffset((prev) => prev - 1)}
               className="nav-button"
@@ -2169,6 +2321,51 @@ const EmployeePerformance = () => {
             </button>
             {currentWeekOffset !== 0 && (
               <button
+                className="res-btn"
+                onClick={() => setCurrentWeekOffset(0)}
+              >
+                Reset
+              </button>
+            )}
+          </div> */}
+          <div className="week-navigation">
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentWeekOffset((prev) => Math.max(prev - 1, 0))
+              }
+              className="nav-button"
+              disabled={currentWeekOffset === 0}
+            >
+              <FaAngleLeft />
+            </button>
+
+            <span
+              style={{
+                fontWeight: "600",
+                fontSize: "0.9rem",
+                color: "#666",
+              }}
+            >
+              Minggu {currentWeekOffset + 1} dari {totalWeeks}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentWeekOffset((prev) =>
+                  Math.min(prev + 1, totalWeeks - 1),
+                )
+              }
+              className="nav-button"
+              disabled={currentWeekOffset >= totalWeeks - 1}
+            >
+              <FaAngleRight />
+            </button>
+
+            {currentWeekOffset !== 0 && (
+              <button
+                type="button"
                 className="res-btn"
                 onClick={() => setCurrentWeekOffset(0)}
               >

@@ -33,6 +33,30 @@ const statusMap = {
 };
 const colors = ["green", "blue", "red", "orange", "purple", "teal"];
 
+const parseDateOnly = (value) => {
+  const dateKey = String(value || "").slice(0, 10);
+
+  return dateKey ? new Date(`${dateKey}T00:00:00`) : null;
+};
+
+const countOverlapDays = (startValue, endValue, rangeStart, rangeEnd) => {
+  const start = parseDateOnly(startValue);
+  const end = parseDateOnly(endValue);
+
+  if (!start || !end) return 0;
+  if (start > rangeEnd || end < rangeStart) return 0;
+
+  const overlapStart = start > rangeStart ? start : rangeStart;
+
+  const overlapEnd = end < rangeEnd ? end : rangeEnd;
+
+  return (
+    Math.floor(
+      (overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24),
+    ) + 1
+  );
+};
+
 const formatStatus = (status) => {
   switch (status?.toLowerCase()) {
     case "pending":
@@ -157,34 +181,138 @@ const LeaveRequestReport = () => {
         // });
 
         const response = await axiosInstance.get("/leavequota");
-        const formattedData = response.data.data.map((item) => ({
-          ...item,
-          titlePrefix: item.user?.titlePrefix,
-          fullName: item.user?.fullName,
-          titleSuffix: item.user?.titleSuffix,
-          nip: item.user?.nip,
-          avatarUrl: item.user?.profilePhoto,
-          //   profession: item.user?.profession?.name,
-          //   position: item.user?.position?.name,
-          //   division: item.user?.position?.division?.name,
-          //   department: item.user?.position?.division?.department?.name,
-          profession: item.user?.profession,
-          position: item.user?.position,
-          division: item.user?.division,
-          department: item.user?.department,
-          percent: Math.round((item.used / item.total) * 100),
-        }));
-        console.log(formattedData);
+        const rawQuota = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
+
+        // const formattedData = response.data.data.map((item) => ({
+        const formattedData = rawQuota.map((item) => {
+          const total = Number(item.total) || 0;
+          const used = Number(item.used) || 0;
+          const remainingValue = Number(item.remaining);
+          return {
+            ...item,
+            titlePrefix: item.user?.titlePrefix,
+            fullName: item.user?.fullName,
+            titleSuffix: item.user?.titleSuffix,
+            nip: item.user?.nip,
+            avatarUrl: item.user?.profilePhoto,
+            //   profession: item.user?.profession?.name,
+            //   position: item.user?.position?.name,
+            //   division: item.user?.position?.division?.name,
+            //   department: item.user?.position?.division?.department?.name,
+            profession: item.user?.profession,
+            position: item.user?.position,
+            division: item.user?.division,
+            department: item.user?.department,
+            percent: Math.round((item.used / item.total) * 100),
+            total,
+            used,
+            remaining: Number.isFinite(remainingValue)
+              ? remainingValue
+              : Math.max(total - used, 0),
+          };
+        });
 
         setQuotaData(formattedData);
       } catch (error) {
         console.error("Gagal ambil data", error);
+        setQuotaData([]);
       } finally {
         setLoading(false);
       }
     };
     fetchQuotas();
   }, []);
+
+  const displayedQuotaData = useMemo(() => {
+    if (!selectedPeriod) return [];
+
+    const [year, month] = selectedPeriod.split("-").map(Number);
+
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0);
+
+    monthStart.setHours(0, 0, 0, 0);
+    monthEnd.setHours(23, 59, 59, 999);
+
+    const yearStart = new Date(year, 0, 1);
+    yearStart.setHours(0, 0, 0, 0);
+
+    return quotaData.map((quota) => {
+      const quotaUserId = Number(quota.userId ?? quota.user?.id);
+
+      const approvedCuti = request.filter((leaveRequest) => {
+        const requestUserId = Number(
+          leaveRequest.userId ?? leaveRequest.user?.id,
+        );
+
+        const typeName = String(
+          leaveRequest.leavetype?.name ??
+            leaveRequest.leavesubtype?.leavetype?.name ??
+            "",
+        ).toLowerCase();
+
+        return (
+          requestUserId === quotaUserId &&
+          leaveRequest.status?.toLowerCase() === "approved" &&
+          typeName.includes("cuti")
+        );
+      });
+
+      const usedThisMonth = approvedCuti.reduce(
+        (total, leaveRequest) =>
+          total +
+          countOverlapDays(
+            leaveRequest.startDate,
+            leaveRequest.endDate,
+            monthStart,
+            monthEnd,
+          ),
+        0,
+      );
+
+      /*
+       * Digunakan untuk menghitung sisa kuota
+       * sampai akhir bulan yang dipilih.
+       */
+      const usedUntilSelectedMonth = approvedCuti.reduce(
+        (total, leaveRequest) =>
+          total +
+          countOverlapDays(
+            leaveRequest.startDate,
+            leaveRequest.endDate,
+            yearStart,
+            monthEnd,
+          ),
+        0,
+      );
+
+      const totalQuota = Number(quota.total) || 0;
+
+      const percentage =
+        totalQuota > 0
+          ? Math.min(
+              100,
+              Math.round((usedUntilSelectedMonth / totalQuota) * 100),
+            )
+          : 0;
+
+      return {
+        ...quota,
+
+        // Terpakai pada bulan yang dipilih
+        used: usedThisMonth,
+
+        // Terpakai sejak Januari sampai bulan pilihan
+        usedCumulative: usedUntilSelectedMonth,
+
+        remaining: Math.max(totalQuota - usedUntilSelectedMonth, 0),
+
+        percent: percentage,
+      };
+    });
+  }, [quotaData, request, selectedPeriod]);
 
   const filteredData = useMemo(() => {
     return request.filter((item) => {
@@ -399,40 +527,79 @@ const LeaveRequestReport = () => {
     });
   }, [filteredData, sort]);
 
+  //   const stats = useMemo(() => {
+  //     return {
+  //       total: request.length,
+  //       pending: request.filter((r) => statusMap[r.status] === "Menunggu").length,
+  //       approved: request.filter((r) => statusMap[r.status] === "Disetujui")
+  //         .length,
+  //       rejected: request.filter((r) => statusMap[r.status] === "Ditolak").length,
+  //       cancelled: request.filter((r) => statusMap[r.status] === "Dibatalkan")
+  //         .length,
+  //       expired: request.filter((r) => statusMap[r.status] === "Kedaluwarsa")
+  //         .length,
+  //     };
+  //   }, [request]);
   const stats = useMemo(() => {
     return {
-      total: request.length,
-      pending: request.filter((r) => statusMap[r.status] === "Menunggu").length,
-      approved: request.filter((r) => statusMap[r.status] === "Disetujui")
-        .length,
-      rejected: request.filter((r) => statusMap[r.status] === "Ditolak").length,
-      cancelled: request.filter((r) => statusMap[r.status] === "Dibatalkan")
-        .length,
-      expired: request.filter((r) => statusMap[r.status] === "Kedaluwarsa")
-        .length,
+      total: filteredData.length,
+
+      pending: filteredData.filter(
+        (item) => statusMap[item.status] === "Menunggu",
+      ).length,
+
+      approved: filteredData.filter(
+        (item) => statusMap[item.status] === "Disetujui",
+      ).length,
+
+      rejected: filteredData.filter(
+        (item) => statusMap[item.status] === "Ditolak",
+      ).length,
+
+      cancelled: filteredData.filter(
+        (item) => statusMap[item.status] === "Dibatalkan",
+      ).length,
+
+      expired: filteredData.filter(
+        (item) => statusMap[item.status] === "Kedaluwarsa",
+      ).length,
     };
-  }, [request]);
+  }, [filteredData]);
 
   const summaryStats = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    // const now = new Date();
+    // const currentMonth = now.getMonth();
+    // const currentYear = now.getFullYear();
 
-    const isCurrentMonth = (dateString) => {
-      if (!dateString) return false;
-      const d = new Date(dateString);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    };
+    const [selectedYear, selectedMonth] = selectedPeriod.split("-").map(Number);
+    const previousDate = new Date(selectedYear, selectedMonth - 2, 1);
+    const previousPeriod = `${previousDate.getFullYear()}-${String(
+      previousDate.getMonth() + 1,
+    ).padStart(2, "0")}`;
 
-    const isLastMonth = (dateString) => {
-      if (!dateString) return false;
-      const d = new Date(dateString);
-      const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
-      return (
-        d.getMonth() === lastMonthDate.getMonth() &&
-        d.getFullYear() === lastMonthDate.getFullYear()
-      );
-    };
+    const getMonthKey = (dateString) => String(dateString || "").slice(0, 7);
+
+    const isCurrentMonth = (dateString) =>
+      getMonthKey(dateString) === selectedPeriod;
+
+    const isLastMonth = (dateString) =>
+      getMonthKey(dateString) === previousPeriod;
+
+    // const isCurrentMonth = (dateString) => {
+    //   if (!dateString) return false;
+    //   const d = new Date(dateString);
+    //   return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    // };
+
+    // const isLastMonth = (dateString) => {
+    //   if (!dateString) return false;
+    //   const d = new Date(dateString);
+    //   const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
+    //   return (
+    //     d.getMonth() === lastMonthDate.getMonth() &&
+    //     d.getFullYear() === lastMonthDate.getFullYear()
+    //   );
+    // };
 
     const calculateDays = (start, end) => {
       if (!start || !end) return 0;
@@ -510,7 +677,7 @@ const LeaveRequestReport = () => {
         growth: calcGrowth(current.total, previous.total),
       },
     };
-  }, [request]);
+  }, [request, selectedPeriod]);
 
   const RenderGrowth = ({ value }) => {
     const numValue = parseFloat(value);
@@ -649,7 +816,8 @@ const LeaveRequestReport = () => {
     doc.setFont("helvetica", "bold");
     doc.text("RINGKASAN KUOTA CUTI KARYAWAN", 14, currentY);
 
-    const quotaTable = quotaData.map((item, index) => [
+    // const quotaTable = quotaData.map((item, index) => [
+    const quotaTable = displayedQuotaData.map((item, index) => [
       index + 1,
       item.fullName || "-",
       item.department || "-",
@@ -849,7 +1017,8 @@ const LeaveRequestReport = () => {
       [],
       ["RINGKASAN KUOTA CUTI KARYAWAN"],
       ["No", "Nama", "Fungsi", "Total Kuota", "Terpakai", "Sisa", "Penggunaan"],
-      ...quotaData.map((item, i) => [
+      //   ...quotaData.map((item, i) => [
+      ...displayedQuotaData.map((item, i) => [
         i + 1,
         item.fullName || "-",
         item.dept || "-",
@@ -1655,8 +1824,10 @@ const LeaveRequestReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {quotaData.length > 0 ? (
-                    quotaData.map((req, i) => {
+                  {/* {quotaData.length > 0 ? ( 
+                   quotaData.map((req, i) => {*/}
+                  {displayedQuotaData.length > 0 ? (
+                    displayedQuotaData.map((req, i) => {
                       return (
                         <tr key={i}>
                           <td className="perf-name-cell">
@@ -2002,7 +2173,7 @@ const LeaveRequestReport = () => {
                     const percent = (item.total / maxTrend) * 100;
                     return (
                       <div className="bar-group" key={index}>
-                        <span className="bar-value">{item.total}</span>
+                        <span className="bar-value-dash">{item.total}</span>
                         <div
                           className="bar blue"
                           style={{
@@ -2034,7 +2205,25 @@ export default LeaveRequestReport;
 const LeaveRequestModal = ({ show, onClose, data }) => {
   if (!show || !data) return null;
 
-  const FILE_BASE_URL = "http://localhost:3000/uploads/evidence/";
+  const API_BASE_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  //   const FILE_BASE_URL = "http://localhost:3000/uploads/evidence/";
+  const getEvidenceUrl = (fileName) => {
+    if (!fileName) return "";
+
+    /*
+     * Apabila backend sudah mengirim URL lengkap,
+     * jangan ditambahkan base URL lagi.
+     */
+    if (/^https?:\/\//i.test(fileName)) {
+      return fileName;
+    }
+    return `${API_BASE_URL}/uploads/evidence/${encodeURIComponent(fileName)}`;
+  };
+
+  const evidenceUrl = data.evidenceUrl || getEvidenceUrl(data.evidenceFile);
   const getApprovalLabel = (status) => {
     return formatStatus(status);
   };
@@ -2096,13 +2285,15 @@ const LeaveRequestModal = ({ show, onClose, data }) => {
               <div className="evidence-preview">
                 {data.evidenceFile.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                   <a
-                    href={`${FILE_BASE_URL}${data.evidenceFile}`}
+                    // href={`${FILE_BASE_URL}${data.evidenceFile}`}
+                    href={evidenceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="evidence-link-container"
                   >
                     <img
-                      src={`${FILE_BASE_URL}${data.evidenceFile}`}
+                      //   src={`${FILE_BASE_URL}${data.evidenceFile}`}
+                      src={evidenceUrl}
                       alt="Bukti Lampiran"
                       className="img-evidence-thumb"
                     />
@@ -2112,7 +2303,8 @@ const LeaveRequestModal = ({ show, onClose, data }) => {
                   </a>
                 ) : (
                   <a
-                    href={`${FILE_BASE_URL}${data.evidenceFile}`}
+                    // href={`${FILE_BASE_URL}${data.evidenceFile}`}
+                    href={evidenceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="button is-small is-link"
