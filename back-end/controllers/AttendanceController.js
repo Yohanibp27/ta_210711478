@@ -1072,10 +1072,29 @@ export const getAttendanceById = async (req, res) => {
       attend.userId === req.userId
     ) {
       const dataUser = attend.toJSON();
+      //   if (dataUser.user) {
+      //     dataUser.user.avatarUrl = dataUser.user.profilePhoto
+      //       ? `http://localhost:3000/uploads/profilePhotos/${dataUser.user.profilePhoto}`
+      //       : null;
+      //   }
       if (dataUser.user) {
-        dataUser.user.avatarUrl = dataUser.user.profilePhoto
-          ? `http://localhost:3000/uploads/profilePhotos/${dataUser.user.profilePhoto}`
-          : null;
+        const backendUrl = (
+          process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+        ).replace(/\/$/, "");
+
+        const profilePhoto = dataUser.user.profilePhoto;
+
+        if (profilePhoto) {
+          if (/^https?:\/\//i.test(profilePhoto)) {
+            dataUser.user.avatarUrl = profilePhoto;
+          } else {
+            const fileName = String(profilePhoto).split("/").pop();
+
+            dataUser.user.avatarUrl = `${backendUrl}/uploads/profilePhotos/${encodeURIComponent(fileName)}`;
+          }
+        } else {
+          dataUser.user.avatarUrl = null;
+        }
       }
       res.status(200).json({
         message: "Berhasil menampilkan data absensi by id",
@@ -1315,6 +1334,10 @@ export const getAttendanceReport = async (req, res) => {
       order: [["date", "ASC"]],
     });
 
+    const backendUrl = (
+      process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+    ).replace(/\/$/, "");
+
     const reportData = attendances.map((att) => {
       const item = att.toJSON();
       const user = item.user;
@@ -1435,9 +1458,25 @@ export const getAttendanceReport = async (req, res) => {
       //     }
       //   }
 
-      const avatarUrl = user?.profilePhoto
-        ? `http://localhost:3000/uploads/profilePhotos/${user.profilePhoto}`
-        : null;
+      //   const avatarUrl = user?.profilePhoto
+      //     ? `http://localhost:3000/uploads/profilePhotos/${user.profilePhoto}`
+      //         : null;
+      let avatarUrl = null;
+      if (user?.profilePhoto) {
+        const profilePhoto = String(user.profilePhoto).trim();
+        if (
+          /^https?:\/\//i.test(profilePhoto) &&
+          !profilePhoto.includes("localhost") &&
+          !profilePhoto.includes("127.0.0.1")
+        ) {
+          avatarUrl = profilePhoto;
+        } else {
+          const fileName = profilePhoto.split("/").pop();
+          avatarUrl = `${backendUrl}/uploads/profilePhotos/${encodeURIComponent(
+            fileName,
+          )}`;
+        }
+      }
 
       return {
         id: item.id,

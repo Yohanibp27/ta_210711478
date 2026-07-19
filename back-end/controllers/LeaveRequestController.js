@@ -1350,17 +1350,54 @@ export const getLeaveRequestById = async (req, res) => {
       return res.status(404).json({ message: "Pengajuan tidak ditemukan" });
     }
     const avatarUser = data.toJSON();
-    if (avatarUser.user?.profilePhoto) {
-      avatarUser.user.avatarUrl = `http://localhost:3000/uploads/profilePhotos/${avatarUser.user.profilePhoto}`;
-    } else {
-      avatarUser.user.avatarUrl = null;
+    // if (avatarUser.user?.profilePhoto) {
+    //   avatarUser.user.avatarUrl = `http://localhost:3000/uploads/profilePhotos/${avatarUser.user.profilePhoto}`;
+    // } else {
+    //   avatarUser.user.avatarUrl = null;
+    // }
+
+    // if (avatarUser.manager?.profilePhoto) {
+    //   avatarUser.manager.avatarUrl = `http://localhost:3000/uploads/profilePhotos/${avatarUser.manager.profilePhoto}`;
+    // }
+    // if (avatarUser.sdm?.profilePhoto) {
+    //   avatarUser.sdm.avatarUrl = `http://localhost:3000/uploads/profilePhotos/${avatarUser.sdm.profilePhoto}`;
+    // }
+
+    const backendUrl = (
+      process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+    ).replace(/\/$/, "");
+    const buildAvatarUrl = (profilePhoto) => {
+      if (!profilePhoto) return null;
+
+      const photoValue = String(profilePhoto).trim();
+
+      // Gunakan langsung jika sudah berupa URL produksi
+      if (
+        /^https?:\/\//i.test(photoValue) &&
+        !photoValue.includes("localhost") &&
+        !photoValue.includes("127.0.0.1")
+      ) {
+        return photoValue;
+      }
+
+      // Ambil nama file jika data lama masih menyimpan URL localhost/path
+      const fileName = photoValue.split("/").pop();
+
+      return `${backendUrl}/uploads/profilePhotos/${encodeURIComponent(fileName)}`;
+    };
+
+    if (avatarUser.user) {
+      avatarUser.user.avatarUrl = buildAvatarUrl(avatarUser.user.profilePhoto);
     }
 
-    if (avatarUser.manager?.profilePhoto) {
-      avatarUser.manager.avatarUrl = `http://localhost:3000/uploads/profilePhotos/${avatarUser.manager.profilePhoto}`;
+    if (avatarUser.manager) {
+      avatarUser.manager.avatarUrl = buildAvatarUrl(
+        avatarUser.manager.profilePhoto,
+      );
     }
-    if (avatarUser.sdm?.profilePhoto) {
-      avatarUser.sdm.avatarUrl = `http://localhost:3000/uploads/profilePhotos/${avatarUser.sdm.profilePhoto}`;
+
+    if (avatarUser.sdm) {
+      avatarUser.sdm.avatarUrl = buildAvatarUrl(avatarUser.sdm.profilePhoto);
     }
 
     res.status(200).json({

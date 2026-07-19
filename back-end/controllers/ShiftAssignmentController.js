@@ -9,68 +9,110 @@ import { Op } from "sequelize";
 import dayjs from "dayjs";
 
 export const getAllShifts = async (req, res) => {
-  const response = await ShiftAssignment.findAll({
-    include: [
-      {
-        model: User,
-        attributes: [
-          "id",
-          "titlePrefix",
-          "fullName",
-          "titleSuffix",
-          "nip",
-          "email",
-          "status",
-          "profilePhoto",
-        ],
-        include: [
-          {
-            model: Position,
-            attributes: ["id", "name"],
-            include: [
-              {
-                model: Division,
-                attributes: ["id", "name"],
-                include: [
-                  {
-                    model: Department,
-                    attributes: ["id", "name"],
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            model: Profession,
-            attributes: ["id", "name"],
-          },
-        ],
-      },
-      {
-        model: WorkShift,
-        attributes: ["id", "name", "startTime", "endTime"],
-      },
-    ],
-  });
+  try {
+    const response = await ShiftAssignment.findAll({
+      include: [
+        {
+          model: User,
+          attributes: [
+            "id",
+            "titlePrefix",
+            "fullName",
+            "titleSuffix",
+            "nip",
+            "email",
+            "status",
+            "profilePhoto",
+          ],
+          include: [
+            {
+              model: Position,
+              attributes: ["id", "name"],
+              include: [
+                {
+                  model: Division,
+                  attributes: ["id", "name"],
+                  include: [
+                    {
+                      model: Department,
+                      attributes: ["id", "name"],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: Profession,
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+        {
+          model: WorkShift,
+          attributes: ["id", "name", "startTime", "endTime"],
+        },
+      ],
+    });
 
-  if (!response) {
-    return res
-      .status(400)
-      .json({ message: "Shift user tenaga medis tidak ditemuka" });
+    // if (!response) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Shift user tenaga medis tidak ditemukan!" });
+    // }
+
+    //   const usersWithAvatar = response.map((user) => {
+    //     const u = user.toJSON();
+    //     u.avatarUrl = u.profilePhoto
+    //       ? `http://localhost:3000/uploads/profilePhotos/${u.profilePhoto}`
+    //       : null;
+    //     return u;
+    //   });
+
+    if (response.length === 0) {
+      return res.status(200).json({
+        message: "Belum ada shift user tenaga medis",
+        data: [],
+      });
+    }
+
+    const backendUrl = (
+      process.env.BACKEND_URL || `${req.protocol}://${req.get("host")}`
+    ).replace(/\/$/, "");
+    const buildAvatarUrl = (profilePhoto) => {
+      if (!profilePhoto) return null;
+      const photoValue = String(profilePhoto).trim();
+      if (
+        /^https?:\/\//i.test(photoValue) &&
+        !photoValue.includes("localhost") &&
+        !photoValue.includes("127.0.0.1")
+      ) {
+        return photoValue;
+      }
+      const fileName = photoValue.split("/").pop();
+      return `${backendUrl}/uploads/profilePhotos/${encodeURIComponent(
+        fileName,
+      )}`;
+    };
+
+    const shiftsWithAvatar = response.map((assignment) => {
+      const item = assignment.toJSON();
+      if (item.user) {
+        item.user.avatarUrl = buildAvatarUrl(item.user.profilePhoto);
+      }
+      return item;
+    });
+
+    res.status(200).json({
+      message: "Berhasil menampilkan shift user tenaga medis",
+      data: shiftsWithAvatar,
+    });
+  } catch (e) {
+    console.error("Get All Shift Error:", e);
+    return res.status(500).json({
+      message: "Gagal menampilkan shift user tenaga medis",
+      error: e.message,
+    });
   }
-
-  const usersWithAvatar = response.map((user) => {
-    const u = user.toJSON();
-    u.avatarUrl = u.profilePhoto
-      ? `http://localhost:3000/uploads/profilePhotos/${u.profilePhoto}`
-      : null;
-    return u;
-  });
-
-  res.status(200).json({
-    message: "Berhasil menampilkan shift user tenaga medis",
-    data: usersWithAvatar,
-  });
 };
 
 export const getShiftById = async (req, res) => {
