@@ -783,6 +783,9 @@ export const getAttendanceHistory = async (req, res) => {
     const search = req.query.search_query?.trim() || "";
     const statusFilter = req.query.status || "all";
 
+    const departmentFilter = req.query.department || "semua";
+    const divisionFilter = req.query.division || "semua";
+
     const where = {
       date: {
         [Op.between]: [startDate, endDate],
@@ -839,7 +842,10 @@ export const getAttendanceHistory = async (req, res) => {
         {
           model: Users,
           where: userWhere,
-          required: Boolean(search),
+          required:
+            Boolean(search) ||
+            departmentFilter !== "semua" ||
+            divisionFilter !== "semua",
           attributes: [
             "id",
             "titlePrefix",
@@ -853,14 +859,32 @@ export const getAttendanceHistory = async (req, res) => {
             {
               model: Position,
               attributes: ["id", "name"],
+              required:
+                departmentFilter !== "semua" || divisionFilter !== "semua",
               include: [
                 {
                   model: Division,
                   attributes: ["id", "name"],
+                  // Kalau Unit dipilih → hanya Division tersebut
+                  where:
+                    divisionFilter !== "semua"
+                      ? { id: divisionFilter }
+                      : undefined,
+                  // Penting: supaya filter Division benar-benar membatasi User
+                  required:
+                    departmentFilter !== "semua" || divisionFilter !== "semua",
                   include: [
                     {
                       model: Department,
                       attributes: ["id", "name"],
+                      // Kalau Fungsi dipilih → hanya Department tersebut
+                      where:
+                        departmentFilter !== "semua"
+                          ? { id: departmentFilter }
+                          : undefined,
+
+                      // Kalau hanya memilih Fungsi, harus INNER JOIN
+                      required: departmentFilter !== "semua",
                     },
                   ],
                 },
@@ -928,6 +952,45 @@ export const getAttendanceHistory = async (req, res) => {
       attributes: [
         "attendanceStatus",
         [Sequelize.fn("COUNT", Sequelize.col("attendances.id")), "total"],
+      ],
+      include: [
+        {
+          model: Users,
+          attributes: [],
+          required: true,
+          where: userWhere,
+          include: [
+            {
+              model: Position,
+              attributes: [],
+              required:
+                departmentFilter !== "semua" || divisionFilter !== "semua",
+              include: [
+                {
+                  model: Division,
+                  attributes: [],
+                  where:
+                    divisionFilter !== "semua"
+                      ? { id: divisionFilter }
+                      : undefined,
+                  required:
+                    departmentFilter !== "semua" || divisionFilter !== "semua",
+                  include: [
+                    {
+                      model: Department,
+                      attributes: [],
+                      where:
+                        departmentFilter !== "semua"
+                          ? { id: departmentFilter }
+                          : undefined,
+                      required: departmentFilter !== "semua",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       ],
       group: ["attendanceStatus"],
       raw: true,

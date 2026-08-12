@@ -43,8 +43,8 @@ function AttendanceHistory() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [showEditModal, setShowEditModal] = useState(null);
-  //   const itemsPerPage = 5;
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
+  //   const itemsPerPage = 10;
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -52,7 +52,9 @@ function AttendanceHistory() {
     limit: 10,
   });
   const [filter, setFilter] = useState({
-    karyawan: "semua",
+    // karyawan: "semua",
+    department: "semua",
+    division: "semua",
     startDate: today,
     endDate: endDate,
   });
@@ -79,25 +81,37 @@ function AttendanceHistory() {
     setSortIcon({ key, direction });
   };
 
-  useEffect(() => {
-    // getAttendances();
-    // fetchAttendanceHistory();
-    fetchOrganizations();
-  }, []);
+  //   useEffect(() => {
+  //     // getAttendances();
+  //     // fetchAttendanceHistory();
+  //     // fetchOrganizations();
+  //     fetchDepartments();
+  //     fetchDivisions("semua");
+  //   }, []);
 
   useEffect(() => {
     fetchAttendanceHistory();
-  }, [currentPage, filter.startDate, filter.endDate, statusFilter, searchText]);
-
-  useEffect(() => {
-    setCurrentPage(1);
   }, [
-    statusFilter,
-    searchText,
-    filter.karyawan,
+    currentPage,
     filter.startDate,
     filter.endDate,
+    filter.department,
+    filter.division,
+    statusFilter,
+    searchText,
   ]);
+
+  //   useEffect(() => {
+  //     setCurrentPage(1);
+  //   }, [
+  //     statusFilter,
+  //     searchText,
+  //     //   filter.karyawan,
+  //     filter.department,
+  //     filter.division,
+  //     filter.startDate,
+  //     filter.endDate,
+  //   ]);
 
   //   useEffect(() => {
   //     const fetchData = async () => {
@@ -232,6 +246,9 @@ function AttendanceHistory() {
           endDate: filter.endDate,
           search_query: searchText,
           status: statusFilter,
+          department:
+            filter.department !== "semua" ? filter.department : undefined,
+          division: filter.division !== "semua" ? filter.division : undefined,
         },
       });
 
@@ -280,22 +297,65 @@ function AttendanceHistory() {
     }
   };
 
-  useEffect(() => {
-    fetchAttendanceHistory();
-  }, [currentPage, filter.startDate, filter.endDate, statusFilter, searchText]);
+  //   const fetchOrganizations = async () => {
+  //     try {
+  //       const [deptRes, divRes] = await Promise.all([
+  //         axiosInstance.get("/departments"),
+  //         axiosInstance.get("/divisions"),
+  //       ]);
+  //       setdepartments(deptRes.data.data || deptRes.data);
+  //       setdivisions(divRes.data.data || divRes.data);
+  //     } catch (err) {
+  //       console.error("Gagal memuat profesi:", err.message);
+  //     }
+  //   };
 
   const fetchOrganizations = async () => {
     try {
-      const [deptRes, divRes] = await Promise.all([
-        axiosInstance.get("/departments"),
-        axiosInstance.get("/divisions"),
-      ]);
+      const deptRes = await axiosInstance.get("/departments");
       setdepartments(deptRes.data.data || deptRes.data);
+
+      const divRes = await axiosInstance.get("/divisions");
       setdivisions(divRes.data.data || divRes.data);
     } catch (err) {
-      console.error("Gagal memuat profesi:", err.message);
+      console.error("Gagal memuat fungsi dan unit:", err.message);
     }
   };
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  useEffect(() => {
+    const fetchDivisionsByDepartment = async () => {
+      try {
+        if (filter.department === "semua") {
+          const response = await axiosInstance.get("/divisions");
+          setdivisions(response.data.data || response.data);
+          return;
+        }
+
+        const response = await axiosInstance.get("/divisions", {
+          params: {
+            departmentId: filter.department,
+          },
+        });
+        setdivisions(response.data.data || response.data);
+      } catch (error) {
+        // Kalau fungsi yang dipilih tidak memiliki unit
+        if (error.response?.status === 404) {
+          setdivisions([]);
+        } else {
+          console.error(
+            "Gagal mengambil unit berdasarkan fungsi:",
+            error.response?.data || error.message,
+          );
+        }
+      }
+    };
+
+    fetchDivisionsByDepartment();
+  }, [filter.department]);
 
   const handleDelete = async (id) => {
     try {
@@ -339,58 +399,120 @@ function AttendanceHistory() {
 
   const attendanceList = Array.isArray(attendance) ? attendance : [];
 
-  const filteredAttendance = attendanceList
-    .filter((att) => {
-      const fullName = [
-        att.user?.titlePrefix,
-        att.user?.fullName,
-        att.user?.titleSuffix,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+  //   const filteredAttendance = attendanceList
+  //     .filter((att) => {
+  //       const fullName = [
+  //         att.user?.titlePrefix,
+  //         att.user?.fullName,
+  //         att.user?.titleSuffix,
+  //       ]
+  //         .filter(Boolean)
+  //         .join(" ")
+  //         .toLowerCase();
 
-      const nip = att.user?.nip?.toLowerCase() || "";
-      const dept =
-        att.user?.position?.division?.department?.name?.toLowerCase() || "";
-      const div = att.user?.position?.division?.name?.toLowerCase() || "";
+  //       const nip = att.user?.nip?.toLowerCase() || "";
+  //       const dept =
+  //         att.user?.position?.division?.department?.name?.toLowerCase() || "";
+  //       const div = att.user?.position?.division?.name?.toLowerCase() || "";
 
-      const searchQuery = searchText.toLowerCase();
+  //       const searchQuery = searchText.toLowerCase();
 
-      const matchSearch =
-        fullName.includes(searchQuery) ||
-        nip.includes(searchQuery) ||
-        dept.includes(searchQuery) ||
-        div.includes(searchQuery);
+  //       const matchSearch =
+  //         fullName.includes(searchQuery) ||
+  //         nip.includes(searchQuery) ||
+  //         dept.includes(searchQuery) ||
+  //         div.includes(searchQuery);
 
-      const matchStatus =
-        statusFilter === "all" || att.attendanceStatus === statusFilter;
-      const macthDepartment =
-        filter.karyawan === "semua" ||
-        dept.toLowerCase().trim() === filter.karyawan.toLowerCase().trim();
-      const macthDivision =
-        filter.karyawan === "semua" ||
-        div.toLowerCase().trim() === filter.karyawan.toLowerCase().trim();
+  //       const matchStatus =
+  //         statusFilter === "all" || att.attendanceStatus === statusFilter;
+  //       //   const matchDepartment =
+  //       // filter.department === "semua" ||
+  //       // dept.toLowerCase().trim() === filter.department.toLowerCase().trim();
+  //       //   const matchDivision =
+  //       //     filter.division === "semua" ||
+  //       //     div.toLowerCase().trim() === filter.division.toLowerCase().trim();
+  //       const matchDepartment =
+  //         filter.department === "semua" ||
+  //         dept === filter.department.toLowerCase().trim();
 
-      const attDate = new Date(att.date);
-      const start = new Date(filter.startDate);
-      const end = new Date(filter.endDate);
-      const matchDate = attDate >= start && attDate <= end;
+  //       const matchDivision =
+  //         filter.division === "semua" ||
+  //         div === filter.division.toLowerCase().trim();
 
-      return (
-        matchSearch &&
-        matchStatus &&
-        macthDepartment &&
-        macthDivision &&
-        matchDate
-      );
-    })
-    .sort((a, b) => {
-      if (sortIcon === "latest") return new Date(b.date) - new Date(a.date);
-      return new Date(a.date) - new Date(b.date);
-    });
+  //       const attDate = new Date(att.date);
+  //       const start = new Date(filter.startDate);
+  //       const end = new Date(filter.endDate);
+  //       const matchDate = attDate >= start && attDate <= end;
 
-  const sortedData = [...filteredAttendance].sort((a, b) => {
+  //       return (
+  //         matchSearch &&
+  //         matchStatus &&
+  //         matchDepartment &&
+  //         matchDivision &&
+  //         matchDate
+  //       );
+  //     })
+  //     .sort((a, b) => {
+  //       if (sortIcon === "latest") return new Date(b.date) - new Date(a.date);
+  //       return new Date(a.date) - new Date(b.date);
+  //     });
+
+  //   const sortedData = [...filteredAttendance].sort((a, b) => {
+  //     let aValue;
+  //     let bValue;
+
+  //     switch (sortIcon.key) {
+  //       case "tanggal":
+  //         aValue = new Date(a.date);
+  //         bValue = new Date(b.date);
+  //         break;
+
+  //       case "nama":
+  //         aValue = (a.user?.fullName || "").toLowerCase();
+  //         bValue = (b.user?.fullName || "").toLowerCase();
+  //         break;
+
+  //       case "sesi":
+  //         aValue = a.user?.workShift?.name || "";
+  //         bValue = b.user?.workShift?.name || "";
+  //         break;
+
+  //       case "checkin":
+  //         aValue = new Date(a.checkInTime || 0);
+  //         bValue = new Date(b.checkInTime || 0);
+  //         break;
+
+  //       case "checkout":
+  //         aValue = new Date(a.checkOutTime || 0);
+  //         bValue = new Date(b.checkOutTime || 0);
+  //         break;
+
+  //       case "duration": {
+  //         const aIn = new Date(a.checkInTime || 0);
+  //         const aOut = new Date(a.checkOutTime || 0);
+  //         const bIn = new Date(b.checkInTime || 0);
+  //         const bOut = new Date(b.checkOutTime || 0);
+
+  //         aValue = aOut - aIn;
+  //         bValue = bOut - bIn;
+  //         break;
+  //       }
+
+  //       case "status":
+  //         aValue = a.attendanceStatus || "";
+  //         bValue = b.attendanceStatus || "";
+  //         break;
+
+  //       default:
+  //         return 0;
+  //     }
+
+  //     if (aValue < bValue) return sortIcon.direction === "asc" ? -1 : 1;
+  //     if (aValue > bValue) return sortIcon.direction === "asc" ? 1 : -1;
+  //     return 0;
+  //   });
+
+  const sortedData = [...attendanceList].sort((a, b) => {
     let aValue;
     let bValue;
 
@@ -442,6 +564,7 @@ function AttendanceHistory() {
 
     if (aValue < bValue) return sortIcon.direction === "asc" ? -1 : 1;
     if (aValue > bValue) return sortIcon.direction === "asc" ? 1 : -1;
+
     return 0;
   });
 
@@ -531,14 +654,19 @@ function AttendanceHistory() {
                 <label className="label">Fungsi</label>
                 <select
                   className="select-input"
-                  value={filter.karyawan}
-                  onChange={(e) =>
-                    setFilter({ ...filter, karyawan: e.target.value })
-                  }
+                  value={filter.department}
+                  onChange={(e) => {
+                    setFilter({
+                      ...filter,
+                      department: e.target.value,
+                      division: "semua",
+                    });
+                    setCurrentPage(1);
+                  }}
                 >
                   <option value="semua">Semua Fungsi</option>
-                  {departments.map((department, index) => (
-                    <option key={index} value={department.name}>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
                       {department.name}
                     </option>
                   ))}
@@ -777,20 +905,24 @@ function AttendanceHistory() {
                   className="search-input"
                   placeholder="Cari nama atau NIP karyawan..."
                   value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 />
               </div>
               <div className="filter-select-group">
                 <select
                   className="select-input"
-                  value={filter.karyawan}
-                  onChange={(e) =>
-                    setFilter({ ...filter, karyawan: e.target.value })
-                  }
+                  value={filter.division}
+                  onChange={(e) => {
+                    setFilter({ ...filter, division: e.target.value });
+                    setCurrentPage(1);
+                  }}
                 >
                   <option value="semua">Semua Unit</option>
-                  {divisions.map((division, index) => (
-                    <option key={index} value={division.name}>
+                  {divisions.map((division) => (
+                    <option key={division.id} value={division.id}>
                       {division.name}
                     </option>
                   ))}
@@ -798,7 +930,10 @@ function AttendanceHistory() {
                 <select
                   className="select-input"
                   value={statusFilter || "all"}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                 >
                   <option value="all">Semua Status</option>
                   <option value="Hadir">Hadir</option>
