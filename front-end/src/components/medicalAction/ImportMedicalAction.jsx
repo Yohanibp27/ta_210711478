@@ -350,13 +350,15 @@ const ImportMedicalAction = () => {
                 </p>
               </div>
               <div className="import-medical-result-item">
-                <p className="import-medical-stat-label">Ter-mapping</p>
+                {/* <p className="import-medical-stat-label">Ter-mapping</p> */}
+                <p className="import-medical-stat-label">Berhasil Import</p>
                 <p className="import-medical-stat-value text-mapped">
                   {result.successfullyMapped}
                 </p>
               </div>
               <div className="import-medical-result-item">
-                <p className="import-medical-stat-label">Gagal Mapping</p>
+                {/* <p className="import-medical-stat-label">Gagal Mapping</p> */}
+                <p className="import-medical-stat-label">Duplikat</p>
                 <p className="import-medical-stat-value text-failed">
                   {result.failedMapping}
                 </p>
