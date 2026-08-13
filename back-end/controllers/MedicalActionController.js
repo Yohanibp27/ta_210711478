@@ -377,7 +377,6 @@ export const importExcel = async (req, res) => {
         totalImported,
         successfullyImported,
         duplicateCount,
-
         // Informasi mapping dokter
         successfullyMapped: mappedCount,
         failedMapping: failedMappingCount,

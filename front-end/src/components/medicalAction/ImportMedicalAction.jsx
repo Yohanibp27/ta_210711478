@@ -353,23 +353,32 @@ const ImportMedicalAction = () => {
                 {/* <p className="import-medical-stat-label">Ter-mapping</p> */}
                 <p className="import-medical-stat-label">Berhasil Import</p>
                 <p className="import-medical-stat-value text-mapped">
-                  {result.successfullyMapped}
+                  {/* {result.successfullyMapped} */}
+                  {result.successfullyImported}
                 </p>
               </div>
               <div className="import-medical-result-item">
                 {/* <p className="import-medical-stat-label">Gagal Mapping</p> */}
                 <p className="import-medical-stat-label">Duplikat</p>
                 <p className="import-medical-stat-value text-failed">
-                  {result.failedMapping}
+                  {/* {result.failedMapping} */}
+                  {result.duplicateCount}
                 </p>
               </div>
             </div>
-            {result.failedMapping > 0 && (
+            {/* {result.failedMapping > 0 && (
               //   <p className="mt-3 text-xs text-orange-600 italic">
               <p className="import-medical-failed-note">
                 * Ada <strong>{result.failedMapping}</strong> data yang tidak
                 cocok dengan nama user di database. Mohon cek kembali penulisan
                 nama dokter di Excel atau Database
+              </p>
+            )} */}
+
+            {result.duplicateCount > 0 && (
+              <p className="import-medical-failed-note">
+                * Ada <strong>{result.duplicateCount}</strong> data yang tidak
+                diimport karena sudah terdapat di database.
               </p>
             )}
           </div>
