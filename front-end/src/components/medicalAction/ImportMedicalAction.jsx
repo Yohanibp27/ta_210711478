@@ -378,7 +378,8 @@ const ImportMedicalAction = () => {
             {result.duplicateCount > 0 && (
               <p className="import-medical-failed-note">
                 * Ada <strong>{result.duplicateCount}</strong> data yang tidak
-                diimport karena sudah terdapat di database.
+                diimport karena merupakan data duplikat yang sudah ada di
+                database.
               </p>
             )}
           </div>
