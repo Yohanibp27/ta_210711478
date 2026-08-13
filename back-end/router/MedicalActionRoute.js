@@ -7,6 +7,8 @@ import {
   getUnitDistribution,
   getHeatmap,
   getAttendanceTimeline,
+  getMedicalActionsMonthCount,
+  deleteMedicalActionsByMonth,
 } from "../controllers/MedicalActionController.js";
 import { verifyUser, alloweRoles } from "../middleware/AuthUser.js";
 
@@ -59,6 +61,18 @@ router.get(
   verifyUser,
   alloweRoles("Admin", "Super Admin", "Supervisor", "Manager"),
   getAttendanceTimeline,
+);
+router.get(
+  "/medical-actions/month/count",
+  verifyUser,
+  alloweRoles("Admin", "Super Admin", "Supervisor", "Manager"),
+  getMedicalActionsMonthCount,
+);
+router.delete(
+  "/medical-actions/month",
+  verifyUser,
+  alloweRoles("Admin", "Super Admin", "Supervisor", "Manager"),
+  deleteMedicalActionsByMonth,
 );
 
 export default router;

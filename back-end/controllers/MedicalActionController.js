@@ -3072,3 +3072,86 @@ export const getMedicalActions = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Mengambil jumlah data tindakan berdasarkan bulan
+export const getMedicalActionsMonthCount = async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({
+        message: "Format bulan harus YYYY-MM",
+      });
+    }
+
+    const startDate = moment
+      .tz(`${month}-01`, "YYYY-MM-DD", "Asia/Jakarta")
+      .startOf("month");
+
+    const endDate = startDate.clone().add(1, "month");
+
+    const totalRows = await ActionData.count({
+      where: {
+        dateOfAction: {
+          [Op.gte]: startDate.format("YYYY-MM-DD HH:mm:ss"),
+          [Op.lt]: endDate.format("YYYY-MM-DD HH:mm:ss"),
+        },
+      },
+    });
+
+    return res.status(200).json({
+      month,
+      totalRows,
+    });
+  } catch (error) {
+    console.error(
+      "Gagal menghitung data tindakan berdasarkan bulan:",
+      error,
+    );
+
+    return res.status(500).json({
+      message: "Gagal menghitung data tindakan",
+      error: error.message,
+    });
+  }
+};
+
+// Menghapus data tindakan berdasarkan bulan
+export const deleteMedicalActionsByMonth = async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({
+        message: "Format bulan harus YYYY-MM",
+      });
+    }
+
+    const startDate = moment
+      .tz(`${month}-01`, "YYYY-MM-DD", "Asia/Jakarta")
+      .startOf("month");
+
+    const endDate = startDate.clone().add(1, "month");
+
+    const deletedCount = await ActionData.destroy({
+      where: {
+        dateOfAction: {
+          [Op.gte]: startDate.format("YYYY-MM-DD HH:mm:ss"),
+          [Op.lt]: endDate.format("YYYY-MM-DD HH:mm:ss"),
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: `Berhasil menghapus data tindakan bulan ${month}`,
+      deletedCount,
+    });
+  } catch (error) {
+    console.error("Gagal menghapus data tindakan per bulan:", error);
+
+    return res.status(500).json({
+      message: "Gagal menghapus data tindakan",
+      error: error.message,
+    });
+  }
+};

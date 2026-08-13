@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-// import axios from "axios";
 import {
   FiUploadCloud,
   FiCheckCircle,
@@ -13,6 +12,7 @@ import {
   FaFilePdf,
   FaSearch,
   FaSort,
+  FaTrashAlt,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { formatTanggalWaktuMundur } from "../../utils/dateHelper";
@@ -32,6 +32,8 @@ const ImportMedicalAction = () => {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toISOString().substring(0, 7),
   );
+  const [monthDataCount, setMonthDataCount] = useState(0);
+  const [checkingMonthCount, setCheckingMonthCount] = useState(false);
 
   const [totalRows, setTotalRows] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -163,6 +165,93 @@ const ImportMedicalAction = () => {
   const indexOfLast = currentPage * requestsPerPage;
   const indexOfFirst = indexOfLast - requestsPerPage;
   //   const currentActions = actions;
+
+  const checkMonthDataCount = async () => {
+    if (!selectedMonth) {
+      setMonthDataCount(0);
+      return;
+    }
+
+    try {
+      setCheckingMonthCount(true);
+
+      const response = await axiosInstance.get(
+        `/medical-actions/month/count?month=${selectedMonth}`,
+      );
+
+      setMonthDataCount(response.data.totalRows || 0);
+    } catch (error) {
+      console.error("Gagal menghitung data bulan:", error);
+
+      setMonthDataCount(0);
+
+      alert(
+        error.response?.data?.message ||
+          "Gagal mengecek jumlah data pada bulan tersebut.",
+      );
+    } finally {
+      setCheckingMonthCount(false);
+    }
+  };
+
+  useEffect(() => {
+    checkMonthDataCount();
+  }, [selectedMonth]);
+
+  const handleDeleteMonth = async () => {
+    if (!selectedMonth) {
+      alert("Pilih bulan terlebih dahulu.");
+      return;
+    }
+
+    if (monthDataCount === 0) {
+      alert("Tidak ada data tindakan pada bulan yang dipilih.");
+      return;
+    }
+
+    const [year, month] = selectedMonth.split("-");
+
+    const confirmDelete = window.confirm(
+      `Hapus seluruh data tindakan bulan ${month}/${year}?\n\n` +
+        `Jumlah data: ${monthDataCount.toLocaleString("id-ID")} data\n\n` +
+        `Data yang sudah dihapus tidak dapat dikembalikan.`,
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await axiosInstance.delete(
+        `/medical-actions/month?month=${selectedMonth}`,
+      );
+
+      alert(
+        `${response.data.message}\n` +
+          `Jumlah data yang dihapus: ${response.data.deletedCount.toLocaleString(
+            "id-ID",
+          )}`,
+      );
+
+      setCurrentPage(1);
+      setResult(null);
+
+      await fetchActions();
+
+      // setelah berhasil dihapus, cek ulang jumlah bulan
+      await checkMonthDataCount();
+    } catch (err) {
+      console.error("Gagal menghapus data bulan:", err);
+
+      setError(
+        err.response?.data?.message ||
+          "Gagal menghapus data tindakan pada bulan tersebut.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="content-page">
@@ -340,6 +429,17 @@ const ImportMedicalAction = () => {
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="button is-danger"
+                  onClick={handleDeleteMonth}
+                  disabled={
+                    loading || checkingMonthCount || monthDataCount === 0
+                  }
+                >
+                  <FaTrashAlt />
+                  Hapus Data Bulan
+                </button>
               </div>
             </div>
             <div className="header-actions">
