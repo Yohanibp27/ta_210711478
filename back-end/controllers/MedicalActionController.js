@@ -341,15 +341,47 @@ export const importExcel = async (req, res) => {
       });
     }
 
-    // 6. Response Detail untuk Laporan TA
+    // // 6. Response Detail untuk Laporan TA
+    // const mappedCount = payload.filter((p) => p.userId !== null).length;
+    // res.status(201).json({
+    //   message: "Data Berhasil Diimport",
+    //   batchId,
+    //   summary: {
+    //     totalImported: payload.length,
+    //     successfullyMapped: mappedCount,
+    //     failedMapping: payload.length - mappedCount,
+    //     info: "Data duplikat yang sudah ada di database otomatis dilewati.",
+    //   },
+    // });
+    // 6. Hitung hasil import sebenarnya
+    const totalImported = payload.length;
+
+    // Hitung data dari batch ini yang benar-benar berhasil masuk database
+    const successfullyImported = await ActionData.count({
+      where: {
+        rawFileId: batchId,
+      },
+    });
+
+    // Data yang tidak masuk karena duplikat
+    const duplicateCount = totalImported - successfullyImported;
+
+    // Mapping dokter tetap dihitung terpisah jika masih dibutuhkan
     const mappedCount = payload.filter((p) => p.userId !== null).length;
+    const failedMappingCount = payload.length - mappedCount;
+
     res.status(201).json({
       message: "Data Berhasil Diimport",
       batchId,
       summary: {
-        totalImported: payload.length,
+        totalImported,
+        successfullyImported,
+        duplicateCount,
+
+        // Informasi mapping dokter
         successfullyMapped: mappedCount,
-        failedMapping: payload.length - mappedCount,
+        failedMapping: failedMappingCount,
+
         info: "Data duplikat yang sudah ada di database otomatis dilewati.",
       },
     });
@@ -3104,10 +3136,7 @@ export const getMedicalActionsMonthCount = async (req, res) => {
       totalRows,
     });
   } catch (error) {
-    console.error(
-      "Gagal menghitung data tindakan berdasarkan bulan:",
-      error,
-    );
+    console.error("Gagal menghitung data tindakan berdasarkan bulan:", error);
 
     return res.status(500).json({
       message: "Gagal menghitung data tindakan",
