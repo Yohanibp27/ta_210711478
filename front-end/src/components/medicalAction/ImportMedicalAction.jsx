@@ -441,7 +441,7 @@ const ImportMedicalAction = () => {
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                 />
-                <button
+                {/* <button
                   type="button"
                   className="button is-danger"
                   onClick={handleDeleteMonth}
@@ -451,7 +451,7 @@ const ImportMedicalAction = () => {
                 >
                   <FaTrashAlt />
                   Hapus Data Bulan
-                </button>
+                </button> */}
               </div>
             </div>
             <div className="header-actions">
